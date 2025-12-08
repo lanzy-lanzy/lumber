@@ -40,7 +40,7 @@
         #canvas-container {
             position: relative;
             height: 600px;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #7c2d12 0%, #b45309 50%, #92400e 100%);
             border-radius: 20px;
             overflow: hidden;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -840,7 +840,7 @@
             const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             
             renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setClearColor(0x000000, 0);
+            renderer.setClearColor(0xb45309, 0.1);
             container.appendChild(renderer.domElement);
 
             camera.position.set(0, 0, 5);
@@ -881,14 +881,14 @@
             }
 
             // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            const ambientLight = new THREE.AmbientLight(0xffd699, 0.7);
             scene.add(ambientLight);
 
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            const directionalLight = new THREE.DirectionalLight(0xffc966, 0.9);
             directionalLight.position.set(5, 10, 7);
             scene.add(directionalLight);
 
-            const pointLight = new THREE.PointLight(0x10b981, 0.5);
+            const pointLight = new THREE.PointLight(0x10b981, 0.6);
             pointLight.position.set(-5, 5, 5);
             scene.add(pointLight);
 
