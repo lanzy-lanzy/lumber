@@ -1,0 +1,51 @@
+<!-- Inventory Composition Chart -->
+<div id="inventoryCompositionChart" style="min-height: 400px; width: 100%;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+// Fetch and render inventory composition chart
+fetch('/api/metrics/inventory_composition/')
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById('inventoryCompositionChart').getContext('2d');
+        
+        const categories = Object.keys(data.categories);
+        const values = categories.map(cat => data.categories[cat].value);
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, categories.length),
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw.toLocaleString('en-PH', {style: 'currency', currency: 'PHP'});
+                                const percentage = ((context.raw / data.total_inventory_value) * 100).toFixed(1);
+                                return context.label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(error => {
+        document.getElementById('inventoryCompositionChart').innerHTML = '<div class="text-red-500 p-4">Error loading chart</div>';
+        console.error('Error:', error);
+    });
+</script>

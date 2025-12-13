@@ -1,0 +1,50 @@
+<!-- Inventory Composition Chart -->
+<div id="inventoryCompositionChart" style="height: 300px; width: 100%;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script id="inventory-data" type="application/json">{{ categories|safe }}</script>
+<script>
+    const total_value = {{ total_inventory_value }};
+    const categoriesDataJson = document.getElementById('inventory-data').textContent;
+    const categoriesData = JSON.parse(categoriesDataJson);
+    
+    if (!categoriesData || Object.keys(categoriesData).length === 0) {
+        document.getElementById('inventoryCompositionChart').innerHTML = '<div class="text-gray-500 p-4 text-center">No inventory data available</div>';
+    } else {
+        const categories = Object.keys(categoriesData);
+        const values = categories.map(cat => categoriesData[cat].value);
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        
+        const ctx = document.getElementById('inventoryCompositionChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: categories,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors.slice(0, categories.length),
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.raw.toLocaleString('en-PH', {style: 'currency', currency: 'PHP'});
+                                const percentage = ((context.raw / total_value) * 100).toFixed(1);
+                                return context.label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>

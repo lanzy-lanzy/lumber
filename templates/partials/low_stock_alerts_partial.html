@@ -1,0 +1,26 @@
+<!-- Low Stock Alerts -->
+{% if alerts %}
+    <div class="space-y-2">
+        {% for alert in alerts %}
+            <div class="border-l-4 border-yellow-400 bg-yellow-50 p-3 rounded">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-semibold text-gray-900">{{ alert.product_name }}</p>
+                        <p class="text-xs text-gray-600">SKU: {{ alert.sku }}</p>
+                    </div>
+                    <span class="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded font-semibold">
+                        {{ alert.board_feet|floatformat:2 }} BF
+                    </span>
+                </div>
+                <p class="text-sm text-gray-700 mt-1">
+                    <strong>{{ alert.quantity_pieces }}</strong> pieces • ₱{{ alert.price_per_bf|floatformat:2 }}/BF
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Est. Value: ₱{{ alert.estimated_value|floatformat:2 }}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-gray-500 p-4 text-center">No low stock alerts</div>
+{% endif %}

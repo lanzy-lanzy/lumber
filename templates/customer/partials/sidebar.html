@@ -1,0 +1,58 @@
+<div class="w-64 bg-slate-800 border-r border-slate-700 flex flex-col h-screen sticky top-0">
+    <!-- Logo -->
+    <div class="p-6 border-b border-slate-700">
+        <div class="flex items-center gap-3 mb-2">
+            <div class="w-12 h-12 bg-gradient-to-br from-amber-600 to-amber-700 rounded-lg flex items-center justify-center shadow-lg">
+                <i class="fas fa-wood text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold">Lumber Pro</h1>
+                <p class="text-xs text-slate-400">Customer Portal</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
+        <a href="{% url 'customer-dashboard' %}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {% if active_page == 'dashboard' %}active text-slate-200{% else %}hover:bg-slate-700/50 text-slate-400 transition{% endif %}">
+            <i class="fas fa-chart-line w-5 text-amber-500"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="{% url 'customer-browse-products' %}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {% if active_page == 'browse_products' %}active text-slate-200{% else %}hover:bg-slate-700/50 text-slate-400 transition{% endif %}">
+            <i class="fas fa-shopping-bag w-5 text-blue-400"></i>
+            <span>Browse Products</span>
+        </a>
+        <a href="{% url 'customer-shopping-cart' %}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {% if active_page == 'shopping_cart' %}active text-slate-200{% else %}hover:bg-slate-700/50 text-slate-400 transition{% endif %}">
+            <i class="fas fa-shopping-cart w-5 text-green-400"></i>
+            <span>Shopping Cart</span>
+            <span class="ml-auto bg-orange-600 text-white text-xs px-2 py-1 rounded-full" id="cart-badge">0</span>
+        </a>
+        <a href="{% url 'customer-my-orders' %}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {% if active_page == 'my_orders' %}active text-slate-200{% else %}hover:bg-slate-700/50 text-slate-400 transition{% endif %}">
+            <i class="fas fa-file-invoice w-5 text-green-400"></i>
+            <span>My Orders</span>
+        </a>
+        <a href="{% url 'notifications' %}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {% if active_page == 'notifications' %}active text-slate-200{% else %}hover:bg-slate-700/50 text-slate-400 transition{% endif %}">
+            <i class="fas fa-bell w-5 text-red-400"></i>
+            <span>Notifications</span>
+            {% if notification_count > 0 %}
+                <span class="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ notification_count }}</span>
+            {% endif %}
+        </a>
+        <a href="{% url 'customer-profile' %}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium {% if active_page == 'profile' %}active text-slate-200{% else %}hover:bg-slate-700/50 text-slate-400 transition{% endif %}">
+            <i class="fas fa-user-circle w-5 text-purple-400"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
+
+    <!-- User Info & Logout -->
+    <div class="p-6 border-t border-slate-700 space-y-3">
+        <div class="text-sm">
+            <p class="text-slate-400 text-xs">Logged in as</p>
+            <p class="font-semibold truncate">{{ user.get_full_name }}</p>
+        </div>
+        <a href="{% url 'logout' %}" class="w-full px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+        </a>
+    </div>
+</div>

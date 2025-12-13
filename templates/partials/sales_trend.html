@@ -1,0 +1,70 @@
+<!-- Sales Trend Chart -->
+<div id="salesTrendChart" style="min-height: 300px; width: 100%;"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+fetch('/api/sales-reports/sales_trend/')
+    .then(response => response.json())
+    .then(data => {
+        // Sort by date
+        const sortedData = data.data.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        const dates = sortedData.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleDateString('en-PH', {month: 'short', day: 'numeric'});
+        });
+        
+        const totals = sortedData.map(d => d.total);
+        
+        const ctx = document.getElementById('salesTrendChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Sales Amount',
+                    data: totals,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointBackgroundColor: '#3b82f6',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '₱' + context.raw.toLocaleString('en-PH', {maximumFractionDigits: 2});
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(error => {
+        document.getElementById('salesTrendChart').innerHTML = '<div class="text-red-500 p-4">Error loading chart</div>';
+        console.error('Error:', error);
+    });
+</script>

@@ -1,11 +1,16 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.pagination import PageNumberPagination
 from django.db.models import Q, Count, Sum, F
 from django.utils import timezone
 from django.shortcuts import render
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
+from django.core.cache import cache
 from datetime import timedelta
+from django.db import transaction as db_transaction
 from app_inventory.models import LumberCategory, LumberProduct, Inventory, StockTransaction
 from app_inventory.serializers import (
     LumberCategorySerializer, LumberProductSerializer, 
@@ -15,18 +20,92 @@ from app_inventory.services import InventoryService
 from app_inventory.reporting import InventoryReports
 
 
+class ProductPagination(PageNumberPagination):
+    """Pagination for products list"""
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
 class LumberCategoryViewSet(viewsets.ModelViewSet):
-    """API endpoint for lumber categories"""
+    """API endpoint for lumber categories - public read access"""
     queryset = LumberCategory.objects.all()
     serializer_class = LumberCategorySerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Public read, authenticated write
 
 
 class LumberProductViewSet(viewsets.ModelViewSet):
-    """API endpoint for lumber products"""
-    queryset = LumberProduct.objects.filter(is_active=True)
+    """API endpoint for lumber products with caching and pagination - public read access"""
+    queryset = LumberProduct.objects.select_related('category').prefetch_related('inventory').filter(is_active=True)
     serializer_class = LumberProductSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]  # Public read, authenticated write
+    pagination_class = ProductPagination
+    
+    def get_queryset(self):
+        """Cache the queryset for better performance"""
+        return super().get_queryset()
+    
+    def list(self, request, *args, **kwargs):
+        """Override list to add caching"""
+        # Generate cache key based on request parameters
+        cache_key = f"products_list_{request.query_params.urlencode()}"
+        
+        # Try to get from cache
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+        
+        # Get from database
+        response = super().list(request, *args, **kwargs)
+        
+        # Cache for 5 minutes (300 seconds)
+        cache.set(cache_key, response.data, 300)
+        
+        return response
+    
+    def retrieve(self, request, *args, **kwargs):
+        """Cache individual product details"""
+        cache_key = f"product_{kwargs.get('pk')}"
+        cached_data = cache.get(cache_key)
+        
+        if cached_data is not None:
+            return Response(cached_data)
+        
+        response = super().retrieve(request, *args, **kwargs)
+        cache.set(cache_key, response.data, 600)  # 10 minutes
+        
+        return response
+    
+    def create(self, request, *args, **kwargs):
+        """Create and clear list cache"""
+        response = super().create(request, *args, **kwargs)
+        self._clear_product_cache()
+        return response
+    
+    def update(self, request, *args, **kwargs):
+        """Update and clear caches"""
+        response = super().update(request, *args, **kwargs)
+        self._clear_product_cache()
+        cache.delete(f"product_{kwargs.get('pk')}")
+        return response
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete and clear caches"""
+        self._clear_product_cache()
+        cache.delete(f"product_{kwargs.get('pk')}")
+        return super().destroy(request, *args, **kwargs)
+    
+    def _clear_product_cache(self):
+        """Clear all product-related caches"""
+        # Clear list cache patterns
+        for pattern in ['products_list_', 'product_']:
+            cache.delete_pattern(pattern) if hasattr(cache, 'delete_pattern') else None
+        # Alternative: clear all caches matching pattern by iterating
+        # This is a fallback for locmem cache
+        keys = list(cache._cache.keys()) if hasattr(cache, '_cache') else []
+        for key in keys:
+            if key.startswith('products_list_') or key.startswith('product_'):
+                cache.delete(key)
     
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -52,6 +131,119 @@ class LumberProductViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(products, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def bulk_delete(self, request):
+        """
+        Bulk delete products by IDs with optional force deletion
+        
+        Expected payload:
+        {
+            "ids": [1, 2, 3],
+            "force": false
+        }
+        
+        When force=true, deletes product even if it has related:
+        - Stock transactions
+        - Sales order items
+        - Inventory snapshots
+        - Shopping cart items
+        
+        All related records are cascade deleted.
+        """
+        import traceback
+        
+        ids = request.data.get('ids', [])
+        force = request.data.get('force', False)
+        
+        if not ids:
+            return Response({'error': 'ids array is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not isinstance(ids, list):
+            return Response({'error': 'ids must be an array'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            products = list(LumberProduct.objects.filter(id__in=ids))
+            
+            if not products:
+                return Response(
+                    {'error': 'No products found with the provided IDs'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            deleted_count = 0
+            failed_deletions = []
+            deletion_summary = []
+            
+            # Delete products one by one
+            for product in products:
+                try:
+                    # Collect deletion info for summary BEFORE deletion
+                    deletion_info = {
+                        'product_id': product.id,
+                        'product_name': str(product),
+                        'deleted_items': {}
+                    }
+                    
+                    # Count related records before deletion
+                    deletion_info['deleted_items']['stock_transactions'] = product.stock_transactions.count()
+                    deletion_info['deleted_items']['sales_order_items'] = product.salesorderitem_set.count()
+                    deletion_info['deleted_items']['inventory_snapshots'] = product.inventory_snapshots.count()
+                    deletion_info['deleted_items']['cart_items'] = product.cartitem_set.count()
+                    
+                    # If force=False and has critical references, warn but still delete (CASCADE)
+                    if not force and (deletion_info['deleted_items']['sales_order_items'] > 0):
+                        deletion_info['warning'] = (
+                            f"Product is referenced in {deletion_info['deleted_items']['sales_order_items']} "
+                            "sales order(s). Set force=true to ignore."
+                        )
+                    
+                    # Delete the product (CASCADE handles all related records)
+                    with db_transaction.atomic():
+                        product.delete()
+                    
+                    deleted_count += 1
+                    deletion_summary.append(deletion_info)
+                    
+                except Exception as e:
+                    error_details = {
+                        'product_id': product.id,
+                        'product_name': str(product),
+                        'error': str(e),
+                        'error_type': type(e).__name__
+                    }
+                    failed_deletions.append(error_details)
+                    # Log the error for debugging
+                    print(f"Error deleting product {product.id}: {str(e)}")
+                    traceback.print_exc()
+            
+            # Clear product caches after all deletion attempts
+            self._clear_product_cache()
+            
+            # Build response
+            response_data = {
+                'success': deleted_count > 0,
+                'deleted_count': deleted_count,
+                'total_requested': len(ids),
+                'force': force,
+            }
+            
+            if deletion_summary:
+                response_data['deletion_details'] = deletion_summary
+            
+            if failed_deletions:
+                response_data['failed_deletions'] = failed_deletions
+            
+            # Always return 200 OK so frontend can process the response
+            return Response(response_data, status=status.HTTP_200_OK)
+                
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': f'Bulk deletion failed: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class InventoryViewSet(viewsets.ReadOnlyModelViewSet):

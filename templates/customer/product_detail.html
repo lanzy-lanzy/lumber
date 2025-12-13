@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Product Details</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        .sidebar-link:hover {
+            transform: translateX(4px);
+        }
+        .sidebar-link.active {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            border-left: 4px solid #fbbf24;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 min-h-screen flex">
+    <!-- Sidebar -->
+    {% include 'customer/partials/sidebar.html' with active_page='browse_products' %}
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto">
+        <!-- Top Bar -->
+        <div class="bg-slate-800 border-b border-slate-700 sticky top-0 z-10">
+            <div class="px-8 py-6">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'customer-browse-products' %}" class="flex items-center gap-2 text-slate-400 hover:text-amber-500 transition">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Products</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="p-8">
+            <!-- Product Details -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                <!-- Image Section -->
+                <div class="lg:col-span-1">
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden sticky top-24">
+                        <div class="aspect-square bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center">
+                            {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover">
+                            {% else %}
+                                <i class="fas fa-wood text-6xl text-slate-600"></i>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Category Badge -->
+                        <div class="p-4 border-t border-slate-700">
+                            <span class="inline-block px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full text-sm font-bold text-white">
+                                <i class="fas fa-tag mr-2"></i>{{ product.category.name }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Details Section -->
+                <div class="lg:col-span-2">
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-2xl border border-slate-700 p-8">
+                        <!-- Product Name -->
+                        <h1 class="text-4xl font-bold mb-2">{{ product.name }}</h1>
+                        <p class="text-slate-400 mb-6">SKU: <span class="text-slate-300 font-mono">{{ product.sku }}</span></p>
+
+                        <!-- Stock Status -->
+                        <div class="mb-8 p-4 rounded-lg {% if inventory.quantity_pieces > 20 %}bg-green-900/30 border border-green-700/50{% elif inventory.quantity_pieces > 5 %}bg-yellow-900/30 border border-yellow-700/50{% else %}bg-red-900/30 border border-red-700/50{% endif %}">
+                            <div class="flex items-center gap-3">
+                                {% if inventory.quantity_pieces > 20 %}
+                                    <i class="fas fa-check-circle text-2xl text-green-400"></i>
+                                    <div>
+                                        <p class="font-bold text-green-300">In Stock</p>
+                                        <p class="text-sm text-green-200">{{ inventory.quantity_pieces }} pieces available</p>
+                                    </div>
+                                {% elif inventory.quantity_pieces > 5 %}
+                                    <i class="fas fa-exclamation-circle text-2xl text-yellow-400"></i>
+                                    <div>
+                                        <p class="font-bold text-yellow-300">Limited Stock</p>
+                                        <p class="text-sm text-yellow-200">{{ inventory.quantity_pieces }} pieces available</p>
+                                    </div>
+                                {% else %}
+                                    <i class="fas fa-times-circle text-2xl text-red-400"></i>
+                                    <div>
+                                        <p class="font-bold text-red-300">Low Stock</p>
+                                        <p class="text-sm text-red-200">{{ inventory.quantity_pieces }} pieces available</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Dimensions -->
+                        <div class="mb-8 p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                            <h3 class="text-lg font-bold mb-4 text-slate-100">Dimensions</h3>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-slate-400 text-sm font-semibold">Thickness</p>
+                                    <p class="text-2xl font-bold text-amber-400">{{ product.thickness }}"</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400 text-sm font-semibold">Width</p>
+                                    <p class="text-2xl font-bold text-amber-400">{{ product.width }}"</p>
+                                </div>
+                                <div>
+                                    <p class="text-slate-400 text-sm font-semibold">Length</p>
+                                    <p class="text-2xl font-bold text-amber-400">{{ product.length }}ft</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Board Feet Information -->
+                        <div class="mb-8 p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                            <h3 class="text-lg font-bold mb-4 text-slate-100">Board Feet Information</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-400">Per Piece</span>
+                                    <span class="text-xl font-bold text-green-400">{{ product.board_feet|floatformat:2 }} BF</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-3 border-t border-slate-600/50">
+                                    <span class="text-slate-400">Total Available</span>
+                                    <span class="text-xl font-bold text-blue-400">{{ inventory.total_board_feet|floatformat:2 }} BF</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pricing -->
+                        <div class="mb-8 p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                            <h3 class="text-lg font-bold mb-4 text-slate-100">Pricing</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-baseline">
+                                    <span class="text-slate-400 font-semibold">Price per Board Foot</span>
+                                    <span class="text-3xl font-bold text-amber-400">₱{{ product.price_per_board_foot|floatformat:2 }}</span>
+                                </div>
+                                {% if product.price_per_piece %}
+                                    <div class="flex justify-between items-baseline pt-3 border-t border-slate-600/50">
+                                        <span class="text-slate-400 font-semibold">Price per Piece</span>
+                                        <span class="text-2xl font-bold text-green-400">₱{{ product.price_per_piece|floatformat:2 }}</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Customer Discount Info -->
+                        {% if customer_profile.is_senior or customer_profile.is_pwd %}
+                            <div class="mb-8 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-star text-2xl text-yellow-400"></i>
+                                    <div>
+                                        <p class="font-bold text-yellow-300">Special Discount Applied</p>
+                                        <p class="text-sm text-yellow-200">You get a 20% discount on all purchases</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Quantity Selector -->
+                        <div class="mb-6 p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+                            <label class="block text-slate-400 text-sm font-semibold mb-3">Quantity (pieces)</label>
+                            <div class="flex items-center gap-3">
+                                <button onclick="decreaseQuantity()" class="px-4 py-2 bg-slate-600/50 hover:bg-slate-600 rounded-lg transition">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <input type="number" id="quantity-input" value="1" min="1" max="{{ inventory.quantity_pieces }}" class="w-20 text-center bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2">
+                                <button onclick="increaseQuantity()" class="px-4 py-2 bg-slate-600/50 hover:bg-slate-600 rounded-lg transition">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                                <span class="text-slate-400 text-sm ml-auto">Max: {{ inventory.quantity_pieces }} pieces</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-4 pt-6 border-t border-slate-600/50">
+                            <button onclick="addToCart({{ product.id }})" class="flex-1 px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2 group" id="add-to-cart-btn">
+                                <i class="fas fa-shopping-cart group-hover:scale-110 transition"></i>
+                                <span>Add to Cart</span>
+                            </button>
+                            <a href="{% url 'customer-browse-products' %}" class="flex-1 px-6 py-4 bg-slate-700/50 hover:bg-slate-700 text-white rounded-lg font-semibold transition flex items-center justify-center gap-2">
+                                <i class="fas fa-arrow-left"></i>
+                                <span>Continue Shopping</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            {% if related_products %}
+                <div class="mb-12">
+                    <h2 class="text-2xl font-bold mb-6">Related Products</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {% for rel_product in related_products %}
+                            <a href="{% url 'customer-product-detail' rel_product.id %}" class="group bg-gradient-to-br from-slate-800/80 to-slate-800/40 rounded-xl border border-slate-700/50 overflow-hidden hover:border-amber-600/80 transition-all duration-500 hover:shadow-2xl hover:shadow-amber-600/20">
+                                <!-- Image -->
+                                <div class="relative h-40 bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
+                                    {% if rel_product.image %}
+                                        <img src="{{ rel_product.image.url }}" alt="{{ rel_product.name }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                                    {% else %}
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fas fa-wood text-3xl text-slate-600"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Info -->
+                                <div class="p-4">
+                                    <h4 class="font-bold text-slate-100 text-sm mb-1 line-clamp-2 group-hover:text-amber-300 transition">{{ rel_product.name }}</h4>
+                                    <p class="text-xs text-slate-400 mb-3">{{ rel_product.thickness }}" × {{ rel_product.width }}" × {{ rel_product.length }}ft</p>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-amber-400 font-bold text-sm">₱{{ rel_product.price_per_board_foot|floatformat:2 }}/BF</span>
+                                        <span class="text-xs px-2 py-1 bg-slate-700/50 rounded text-slate-300">{{ rel_product.inventory.quantity_pieces }} pcs</span>
+                                    </div>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-slate-800 border-t border-slate-700 mt-12">
+            <div class="px-8 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div>
+                        <h4 class="font-bold text-slate-100 mb-4">About</h4>
+                        <p class="text-slate-400 text-sm">Premium lumber supplier with quality products and excellent customer service.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-100 mb-4">Quick Links</h4>
+                        <ul class="space-y-2 text-sm text-slate-400">
+                            <li><a href="{% url 'customer-browse-products' %}" class="hover:text-amber-500 transition">Browse Products</a></li>
+                            <li><a href="#" class="hover:text-amber-500 transition">About Us</a></li>
+                            <li><a href="#" class="hover:text-amber-500 transition">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-100 mb-4">Account</h4>
+                        <ul class="space-y-2 text-sm text-slate-400">
+                            <li><a href="{% url 'customer-profile' %}" class="hover:text-amber-500 transition">My Profile</a></li>
+                            <li><a href="{% url 'customer-my-orders' %}" class="hover:text-amber-500 transition">My Orders</a></li>
+                            <li><a href="{% url 'logout' %}" class="hover:text-amber-500 transition">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-slate-700 pt-8 text-center text-slate-500 text-sm">
+                    <p>© 2024 Lumber Management System. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <style>
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+    </style>
+
+    <script>
+        const maxQuantity = {{ inventory.quantity_pieces }};
+
+        function increaseQuantity() {
+            const input = document.getElementById('quantity-input');
+            const newValue = parseInt(input.value) + 1;
+            if (newValue <= maxQuantity) {
+                input.value = newValue;
+            }
+        }
+
+        function decreaseQuantity() {
+            const input = document.getElementById('quantity-input');
+            const newValue = parseInt(input.value) - 1;
+            if (newValue >= 1) {
+                input.value = newValue;
+            }
+        }
+
+        async function addToCart(productId) {
+            const quantity = parseInt(document.getElementById('quantity-input').value);
+            const btn = document.getElementById('add-to-cart-btn');
+            const originalText = btn.innerHTML;
+
+            if (quantity < 1) {
+                alert('Please select a valid quantity');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
+
+            try {
+                const response = await fetch('/api/cart/add_item/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: quantity
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    alert('Error: ' + (error.error || 'Could not add to cart'));
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                    return;
+                }
+
+                // Success
+                const cartData = await response.json();
+                alert(`✓ Added ${quantity} item(s) to cart!\n\nCart now has ${cartData.item_count} items`);
+                
+                // Reset quantity
+                document.getElementById('quantity-input').value = '1';
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                
+                // Optional: redirect to cart
+                setTimeout(() => {
+                    if (confirm('View shopping cart?')) {
+                        window.location.href = '/customer/cart/';
+                    }
+                }, 500);
+
+            } catch (error) {
+                console.error('Error adding to cart:', error);
+                alert('Error adding to cart');
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Update cart badge
+        function updateCartBadge() {
+            fetch('/api/cart/my_cart/', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('cart-badge');
+                if (badge) {
+                    badge.textContent = data.item_count || 0;
+                }
+            })
+            .catch(error => console.error('Error updating cart badge:', error));
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateCartBadge();
+            // Refresh every 5 seconds
+            setInterval(updateCartBadge, 5000);
+        });
+    </script>
+</body>
+</html>

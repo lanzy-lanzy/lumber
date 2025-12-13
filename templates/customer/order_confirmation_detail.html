@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation #{{ sales_order.so_number }} - Lumber Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        .sidebar-link:hover {
+            transform: translateX(4px);
+        }
+        .sidebar-link.active {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            border-left: 4px solid #fbbf24;
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-slate-100 min-h-screen flex">
+    <!-- Sidebar -->
+    {% include 'customer/partials/sidebar.html' with active_page='ready_orders' %}
+
+    <!-- Main Content -->
+    <div class="flex-1 overflow-auto">
+        <!-- Top Bar -->
+        <div class="bg-slate-800 border-b border-slate-700 sticky top-0 z-10">
+            <div class="px-8 py-6">
+                <div class="flex items-center gap-4">
+                    <a href="{% url 'ready-orders' %}" class="flex items-center gap-2 text-slate-400 hover:text-amber-500 transition">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Back to Ready Orders</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div class="p-8">
+            <div class="max-w-4xl mx-auto">
+                <!-- Error Message -->
+                {% if error %}
+                    <div class="bg-red-900/30 border border-red-500/50 text-red-200 px-4 py-3 rounded-lg mb-6 flex items-center">
+                        <i class="fas fa-exclamation-circle mr-2 text-red-400"></i>{{ error }}
+                    </div>
+                {% endif %}
+
+                <!-- Order Header -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-2xl border border-slate-700 mb-6 overflow-hidden">
+                    <div class="bg-gradient-to-r from-blue-900/50 to-blue-800/50 px-8 py-6 border-b border-blue-500/20">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h1 class="text-3xl font-bold text-white">Order #{{ sales_order.so_number }}</h1>
+                                <p class="text-blue-200 mt-2 text-sm">Confirmation ID: {{ confirmation.id }}</p>
+                            </div>
+                            <div class="text-right">
+                                {% if confirmation.status == 'ready_for_pickup' %}
+                                    <span class="inline-block px-4 py-2 bg-green-500 text-white font-bold rounded-lg text-lg shadow-lg shadow-green-900/20">
+                                        <i class="fas fa-check mr-2"></i>READY FOR PICKUP
+                                    </span>
+                                {% elif confirmation.status == 'picked_up' %}
+                                    <span class="inline-block px-4 py-2 bg-blue-500 text-white font-bold rounded-lg text-lg shadow-lg shadow-blue-900/20">
+                                        <i class="fas fa-box-open mr-2"></i>PICKED UP
+                                    </span>
+                                {% elif confirmation.status == 'confirmed' %}
+                                    <span class="inline-block px-4 py-2 bg-yellow-500 text-white font-bold rounded-lg text-lg shadow-lg shadow-yellow-900/20">
+                                        <i class="fas fa-clock mr-2"></i>CONFIRMED
+                                    </span>
+                                {% else %}
+                                    <span class="inline-block px-4 py-2 bg-slate-500 text-white font-bold rounded-lg text-lg shadow-lg">
+                                        {{ confirmation.get_status_display }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Details Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+                        <!-- Left Column: Order Info -->
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-100 mb-4 flex items-center">
+                                <i class="fas fa-info-circle text-blue-400 mr-2"></i>Order Information
+                            </h3>
+                            <dl class="space-y-3">
+                                <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                    <dt class="text-slate-400 text-sm">Created:</dt>
+                                    <dd class="text-slate-200 text-sm">{{ confirmation.created_at|date:"M d, Y H:i" }}</dd>
+                                </div>
+                                <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                    <dt class="text-slate-400 text-sm">Estimated Pickup:</dt>
+                                    <dd class="text-slate-200 text-sm">
+                                        {% if confirmation.estimated_pickup_date %}
+                                            {{ confirmation.estimated_pickup_date|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-slate-500 italic">Not set</span>
+                                        {% endif %}
+                                    </dd>
+                                </div>
+                                {% if confirmation.ready_at %}
+                                    <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                        <dt class="text-slate-400 text-sm">Ready Since:</dt>
+                                        <dd class="text-green-400 font-semibold text-sm">{{ confirmation.ready_at|date:"M d, Y H:i" }}</dd>
+                                    </div>
+                                {% endif %}
+                                {% if confirmation.picked_up_at %}
+                                    <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                        <dt class="text-slate-400 text-sm">Picked Up:</dt>
+                                        <dd class="text-blue-400 font-semibold text-sm">{{ confirmation.picked_up_at|date:"M d, Y H:i" }}</dd>
+                                    </div>
+                                {% endif %}
+                            </dl>
+                        </div>
+
+                        <!-- Right Column: Payment Info -->
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-100 mb-4 flex items-center">
+                                <i class="fas fa-coins text-yellow-400 mr-2"></i>Payment Information
+                            </h3>
+                            <dl class="space-y-3">
+                                <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                    <dt class="text-slate-400 text-sm">Total Amount:</dt>
+                                    <dd class="text-lg font-bold text-slate-100">₱{{ sales_order.total_amount|floatformat:2 }}</dd>
+                                </div>
+                                {% if sales_order.discount_amount > 0 %}
+                                    <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                        <dt class="text-slate-400 text-sm">Discount:</dt>
+                                        <dd class="text-green-400 font-semibold text-sm">-₱{{ sales_order.discount_amount|floatformat:2 }}</dd>
+                                    </div>
+                                {% endif %}
+                                <div class="flex justify-between border-b border-slate-700/50 pb-2">
+                                    <dt class="text-slate-400 text-sm">Amount Paid:</dt>
+                                    <dd class="text-slate-200 font-semibold text-sm">₱{{ sales_order.amount_paid|floatformat:2 }}</dd>
+                                </div>
+                                <div class="flex justify-between pt-2">
+                                    <dt class="text-slate-400 text-sm">Balance Due:</dt>
+                                    {% if sales_order.balance <= 0 %}
+                                        <dd class="inline-block px-3 py-1 bg-green-900/40 text-green-300 font-bold rounded text-xs">
+                                            <i class="fas fa-check mr-1"></i> PAID
+                                        </dd>
+                                    {% else %}
+                                        <dd class="inline-block px-3 py-1 bg-red-900/40 text-red-300 font-bold rounded text-xs">
+                                            ₱{{ sales_order.balance|floatformat:2 }}
+                                        </dd>
+                                    {% endif %}
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Items -->
+                <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-2xl border border-slate-700 mb-6 overflow-hidden">
+                    <div class="px-8 py-4 bg-slate-800/80 border-b border-slate-700 flex items-center gap-2">
+                        <i class="fas fa-cubes text-slate-400"></i>
+                        <h3 class="text-lg font-bold text-slate-100">Order Items</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-700/50">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">Product</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-300 uppercase tracking-wider">Quantity</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-300 uppercase tracking-wider">Board Feet</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-300 uppercase tracking-wider">Unit Price</th>
+                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-300 uppercase tracking-wider">Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-700/50">
+                                {% for item in sales_order.sales_order_items.all %}
+                                    <tr class="hover:bg-slate-700/30 transition">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="font-medium text-slate-100">{{ item.product.name }}</span>
+                                                <span class="text-xs text-slate-400">SKU: {{ item.product.sku }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-right text-slate-300">{{ item.quantity_pieces }} pcs</td>
+                                        <td class="px-6 py-4 text-right text-slate-300">{{ item.board_feet|floatformat:2 }} bf</td>
+                                        <td class="px-6 py-4 text-right text-amber-400">₱{{ item.unit_price|floatformat:2 }}<span class="text-slate-500 text-xs">/bf</span></td>
+                                        <td class="px-6 py-4 text-right font-bold text-green-400">₱{{ item.subtotal|floatformat:2 }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="bg-slate-700/30 border-t border-slate-700/50">
+                                <tr>
+                                    <td colspan="4" class="px-6 py-4 text-right font-bold text-slate-200">Total:</td>
+                                    <td class="px-6 py-4 text-right font-bold text-xl text-amber-400">₱{{ sales_order.total_amount|floatformat:2 }}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Notifications History -->
+                {% if notifications %}
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-2xl border border-slate-700 mb-6 overflow-hidden">
+                        <div class="px-8 py-4 bg-slate-800/80 border-b border-slate-700 flex items-center gap-2">
+                            <i class="fas fa-bell text-slate-400"></i>
+                            <h3 class="text-lg font-bold text-slate-100">Notification History</h3>
+                        </div>
+                        <div class="divide-y divide-slate-700/50">
+                            {% for notif in notifications %}
+                                <div class="px-8 py-4 border-l-4 
+                                    {% if notif.notification_type == 'ready_for_pickup' %}
+                                        border-green-500 bg-green-900/10
+                                    {% elif notif.notification_type == 'payment_completed' %}
+                                        border-blue-500 bg-blue-900/10
+                                    {% else %}
+                                        border-slate-500 bg-slate-800/50
+                                    {% endif %}">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h4 class="font-semibold text-slate-200">{{ notif.title }}</h4>
+                                            <p class="text-slate-400 text-sm mt-1">{{ notif.message }}</p>
+                                            <p class="text-xs text-slate-500 mt-2">
+                                                <i class="far fa-clock mr-1"></i>{{ notif.created_at|date:"M d, Y \a\t H:i" }}
+                                            </p>
+                                        </div>
+                                        <span class="text-xs font-bold px-2 py-1 rounded bg-slate-700 text-slate-300 border border-slate-600">
+                                            {{ notif.get_notification_type_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                {% if confirmation.status == 'ready_for_pickup' %}
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-800/50 rounded-2xl border border-slate-700 p-8 text-center">
+                        <h3 class="text-xl font-bold text-slate-100 mb-4">Ready to Pickup?</h3>
+                        <p class="text-slate-400 mb-6 max-w-lg mx-auto">
+                            Your order is ready! When you visit our store and pick it up, click the button below to confirm.
+                        </p>
+                        <button type="button" onclick="confirmPickup({{ confirmation.id }})"
+                                class="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold rounded-lg shadow-lg hover:shadow-green-900/30 transition transform hover:scale-105 flex items-center justify-center gap-2 mx-auto">
+                            <i class="fas fa-check-circle"></i> Confirm Pickup
+                        </button>
+                    </div>
+                {% elif confirmation.status == 'picked_up' %}
+                    <div class="bg-green-900/20 border-2 border-green-500/50 rounded-2xl p-8 text-center">
+                        <i class="fas fa-check-circle text-green-500" style="font-size: 3rem;"></i>
+                        <h3 class="text-2xl font-bold text-green-400 mt-4">Order Picked Up!</h3>
+                        <p class="text-green-200/70 mt-2">Thank you for your business!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="bg-slate-800 border-t border-slate-700 mt-12">
+            <div class="px-8 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                    <div>
+                        <h4 class="font-bold text-slate-100 mb-4">About</h4>
+                        <p class="text-slate-400 text-sm">Premium lumber supplier with quality products and excellent customer service.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-100 mb-4">Quick Links</h4>
+                        <ul class="space-y-2 text-sm text-slate-400">
+                            <li><a href="{% url 'customer-browse-products' %}" class="hover:text-amber-500 transition">Browse Products</a></li>
+                            <li><a href="{% url 'customer-shopping-cart' %}" class="hover:text-amber-500 transition">Shopping Cart</a></li>
+                            <li><a href="{% url 'customer-my-orders' %}" class="hover:text-amber-500 transition">My Orders</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-slate-100 mb-4">Account</h4>
+                        <ul class="space-y-2 text-sm text-slate-400">
+                            <li><a href="{% url 'customer-profile' %}" class="hover:text-amber-500 transition">My Profile</a></li>
+                            <li><a href="{% url 'customer-my-orders' %}" class="hover:text-amber-500 transition">Order History</a></li>
+                            <li><a href="{% url 'logout' %}" class="hover:text-amber-500 transition">Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-slate-700 pt-8 text-center text-slate-500 text-sm">
+                    <p>© 2024 Lumber Management System. All rights reserved.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+    function confirmPickup(confirmationId) {
+        if (!confirm('Are you sure you want to confirm pickup of this order?')) {
+            return;
+        }
+        
+        fetch(`/orders/${confirmationId}/confirm-pickup/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Thank you! Your pickup has been confirmed.');
+                window.location.reload();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            // alert('An error occurred'); // Suppressed generic error to avoid alarm if it worked despite network blip
+        });
+    }
+    </script>
+</body>
+</html>

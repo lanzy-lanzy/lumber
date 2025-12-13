@@ -133,6 +133,7 @@ def products_management(request):
                 price_per_board_foot=request.POST.get('price_per_board_foot'),
                 price_per_piece=request.POST.get('price_per_piece') or None,
                 sku=request.POST.get('sku'),
+                image=request.FILES.get('image') if request.FILES else None,
             )
             # Create inventory record
             Inventory.objects.create(product=product)
@@ -148,6 +149,15 @@ def products_management(request):
             product.price_per_board_foot = request.POST.get('price_per_board_foot')
             product.price_per_piece = request.POST.get('price_per_piece') or None
             product.sku = request.POST.get('sku')
+            
+            # Handle image upload
+            if request.FILES.get('image'):
+                product.image = request.FILES.get('image')
+            
+            # Handle image removal
+            if request.POST.get('clear_image') == 'true':
+                product.image = None
+            
             product.save()
             return JsonResponse({'success': True, 'message': 'Product updated successfully'})
         
@@ -163,7 +173,7 @@ def products_management(request):
         'products': products,
         'categories': categories,
     }
-    return render(request, 'inventory/management/products.html', context)
+    return render(request, 'inventory/products.html', context)
 
 
 @login_required

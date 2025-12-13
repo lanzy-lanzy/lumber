@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from app_delivery.models import Delivery, DeliveryLog
+from app_sales.serializers import SalesOrderSerializer
 
 
 class DeliveryLogSerializer(serializers.ModelSerializer):
@@ -13,11 +14,11 @@ class DeliveryLogSerializer(serializers.ModelSerializer):
 
 class DeliverySerializer(serializers.ModelSerializer):
     delivery_logs = DeliveryLogSerializer(many=True, read_only=True)
-    sales_order_number = serializers.CharField(source='sales_order.so_number', read_only=True)
+    sales_order = SalesOrderSerializer(read_only=True)
     
     class Meta:
         model = Delivery
-        fields = ['id', 'delivery_number', 'sales_order', 'sales_order_number', 'status',
+        fields = ['id', 'delivery_number', 'sales_order', 'status',
                   'driver_name', 'plate_number', 'customer_signature', 'delivery_logs',
                   'created_at', 'updated_at', 'delivered_at']
         read_only_fields = ['id', 'delivery_number', 'created_at', 'updated_at']

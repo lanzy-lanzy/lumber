@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 from rest_framework.routers import DefaultRouter
 from core.views import UserViewSet
 from app_inventory.views import (
@@ -7,8 +9,10 @@ from app_inventory.views import (
     StockTransactionViewSet, InventoryReportViewSet, AdjustmentViewSet
 )
 from app_sales.views import CustomerViewSet, SalesOrderViewSet, ReceiptViewSet
+from app_sales.cart_views import ShoppingCartViewSet
 from app_sales.pos import POSViewSet
 from app_sales.report_views import SalesReportViewSet
+from app_sales.confirmation_views import OrderConfirmationViewSet, NotificationViewSet
 from app_delivery.views import DeliveryViewSet
 from app_delivery.report_views import DeliveryReportViewSet
 from app_delivery.warehouse import WarehouseViewSet
@@ -34,8 +38,11 @@ router.register(r'inventory-reports', InventoryReportViewSet, basename='inventor
 router.register(r'customers', CustomerViewSet, basename='customer')
 router.register(r'sales-orders', SalesOrderViewSet, basename='sales-order')
 router.register(r'receipts', ReceiptViewSet, basename='receipt')
+router.register(r'cart', ShoppingCartViewSet, basename='shopping-cart')
 router.register(r'pos', POSViewSet, basename='pos')
 router.register(r'sales-reports', SalesReportViewSet, basename='sales-report')
+router.register(r'confirmations', OrderConfirmationViewSet, basename='confirmation')
+router.register(r'notifications', NotificationViewSet, basename='notification')
 
 # Delivery
 router.register(r'deliveries', DeliveryViewSet, basename='delivery')
@@ -58,4 +65,9 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api-auth/', include('rest_framework.urls')),
     path('inventory/management/', include('app_inventory.management_urls')),
+    path('', include('app_sales.notification_urls')),
 ]
+
+# Serve media files in development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

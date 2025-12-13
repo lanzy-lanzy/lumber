@@ -69,6 +69,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "app_sales.context_processors.order_notifications",
             ],
         },
     },
@@ -84,6 +85,18 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+
+
+# Caching configuration
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000
+        }
     }
 }
 
@@ -158,3 +171,6 @@ TEMPLATES[0]['DIRS'].append(os.path.join(BASE_DIR, 'templates'))
 
 # Custom User Model
 AUTH_USER_MODEL = 'core.CustomUser'
+
+# Login URL for @login_required decorator
+LOGIN_URL = 'login'

@@ -344,6 +344,24 @@
             background: linear-gradient(90deg, #10b981, #059669);
             border-radius: 2px;
         }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100">
@@ -358,7 +376,6 @@
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#features" class="navbar-link">Features</a>
                 <a href="#dashboard" class="navbar-link">Dashboard</a>
-                <a href="#pricing" class="navbar-link">Pricing</a>
                 <a href="#contact" class="navbar-link">Contact</a>
             </div>
             {% if user.is_authenticated %}
@@ -696,90 +713,157 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section id="pricing" class="py-20">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">
-                    Simple, Transparent Pricing
-                </h2>
-                <p class="text-xl text-slate-400">Choose the perfect plan for your business</p>
-            </div>
+    <!-- Featured Products Section -->
+     <section id="products" class="py-24 relative overflow-hidden">
+         <!-- Animated Background -->
+         <div class="absolute inset-0">
+             <div class="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-orange-900/10 to-amber-900/20 blur-3xl"></div>
+             <div class="absolute top-0 left-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl animate-pulse"></div>
+             <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
+         </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Pricing Card 1 -->
-                <div class="bg-slate-800/50 border border-slate-700 rounded-15px p-8 hover:border-green-500/50 transition-all duration-300" data-aos="fade-up">
-                    <h3 class="text-2xl font-bold mb-2">Starter</h3>
-                    <p class="text-slate-400 mb-4">For small businesses</p>
-                    <div class="mb-6">
-                        <span class="text-4xl font-bold">₱9,999</span>
-                        <span class="text-slate-400">/month</span>
-                    </div>
-                    <button class="btn-secondary w-full py-2 rounded-lg font-semibold mb-6">Get Started</button>
-                    <ul class="space-y-3 text-slate-300 text-sm">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Basic Inventory</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> POS System</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> 1 User</li>
-                    </ul>
-                </div>
+         <div class="max-w-7xl mx-auto px-6 relative z-10">
+             <!-- Section Header -->
+             <div class="text-center mb-16">
+                 <div class="inline-block mb-4">
+                     <span class="text-sm font-bold text-amber-400 uppercase tracking-widest bg-amber-500/20 px-4 py-2 rounded-full border border-amber-500/30">
+                         <i class="fas fa-crown mr-2"></i>Premium Selection
+                     </span>
+                 </div>
+                 <h2 class="text-5xl md:text-6xl font-bold mb-4">
+                     <span class="text-white">Discover Our</span><br>
+                     <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent">Finest Lumber</span>
+                 </h2>
+                 <p class="text-xl text-slate-400 max-w-2xl mx-auto">Hand-selected premium lumber products for your construction needs. Browse, compare, and find the perfect materials for your project.</p>
+             </div>
 
-                <!-- Pricing Card 2 -->
-                <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 border-2 border-green-500/50 rounded-15px p-8 relative scale-105" data-aos="fade-up" data-aos-delay="100">
-                    <div class="absolute -top-5 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-1 rounded-full text-sm font-bold">POPULAR</div>
-                    <h3 class="text-2xl font-bold mb-2">Professional</h3>
-                    <p class="text-slate-400 mb-4">For growing businesses</p>
-                    <div class="mb-6">
-                        <span class="text-4xl font-bold">₱24,999</span>
-                        <span class="text-slate-400">/month</span>
-                    </div>
-                    <button class="btn-primary w-full py-2 rounded-lg font-semibold mb-6 text-white relative z-10">Get Started</button>
-                    <ul class="space-y-3 text-slate-300 text-sm">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Full Inventory</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> POS & Delivery</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> 5 Users</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Analytics</li>
-                    </ul>
-                </div>
+             <div x-data="landingProducts()" x-init="init()" class="space-y-8">
+                 <!-- Loading Indicator -->
+                 <template x-if="isLoading">
+                     <div class="flex items-center justify-center py-20">
+                         <div class="text-center">
+                             <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-600/30 border-t-amber-500"></div>
+                             <p class="text-slate-400 mt-4 font-medium">Loading premium products...</p>
+                         </div>
+                     </div>
+                 </template>
 
-                <!-- Pricing Card 3 -->
-                <div class="bg-slate-800/50 border border-slate-700 rounded-15px p-8 hover:border-green-500/50 transition-all duration-300" data-aos="fade-up" data-aos-delay="200">
-                    <h3 class="text-2xl font-bold mb-2">Enterprise</h3>
-                    <p class="text-slate-400 mb-4">For large organizations</p>
-                    <div class="mb-6">
-                        <span class="text-4xl font-bold">Custom</span>
-                    </div>
-                    <button class="btn-secondary w-full py-2 rounded-lg font-semibold mb-6">Contact Sales</button>
-                    <ul class="space-y-3 text-slate-300 text-sm">
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Everything</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Unlimited Users</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Custom Integration</li>
-                        <li class="flex items-center gap-2"><i class="fas fa-check text-green-500"></i> Dedicated Support</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
+                 <!-- Products Grid -->
+                 <template x-if="!isLoading && products.length > 0">
+                     <div>
+                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                             <template x-for="(product, index) in products.slice(0, 8)" :key="product.id">
+                                 <div class="group relative cursor-pointer" @click="viewProduct(product.id)" :style="`animation-delay: ${index * 50}ms;`" style="animation: slideInUp 0.6s ease-out forwards;">
+                                     <!-- Card Container -->
+                                     <div class="relative h-full bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden transition-all duration-500 hover:border-amber-600/80 hover:shadow-2xl hover:shadow-amber-600/20 backdrop-blur-sm">
+                                         <!-- Image Section -->
+                                         <div class="relative h-56 bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
+                                             <!-- Product Image -->
+                                             <template x-if="product.image">
+                                                 <img :src="product.image" :alt="product.name" 
+                                                      class="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700 ease-out">
+                                             </template>
+                                             <template x-if="!product.image">
+                                                 <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
+                                                     <i class="fas fa-wood text-5xl text-slate-600"></i>
+                                                 </div>
+                                             </template>
+                                             
+                                             <!-- Overlay Gradient -->
+                                             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div>
+                                             
+                                             <!-- Category Badge -->
+                                             <div class="absolute top-4 right-4 px-3 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-lg transform transition-transform group-hover:scale-110 duration-300">
+                                                 <i class="fas fa-tag mr-1"></i>
+                                                 <span x-text="getCategoryLabel(product.category)"></span>
+                                             </div>
 
-    <!-- CTA Section -->
-    <section class="py-20 relative overflow-hidden">
-        <div class="absolute inset-0 bg-gradient-to-r from-green-900/20 via-emerald-900/20 to-teal-900/20 blur-3xl"></div>
-        <div class="max-w-4xl mx-auto px-6 relative z-10 text-center" data-aos="zoom-in">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">Ready to Transform Your Business?</h2>
-            <p class="text-xl text-slate-400 mb-8">Join hundreds of lumber businesses using Lumber Pro to streamline operations and boost profitability.</p>
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-               {% if user.is_authenticated %}
-                   <a href="{% url 'dashboard' %}" class="btn-primary text-white px-8 py-3 rounded-lg relative z-10 font-semibold text-lg inline-flex items-center justify-center">
-                       Go to Dashboard
-                   </a>
-               {% else %}
-                   <a href="{% url 'login' %}" class="btn-primary text-white px-8 py-3 rounded-lg relative z-10 font-semibold text-lg inline-flex items-center justify-center">
-                       Start Free Trial (30 Days)
-                   </a>
-               {% endif %}
-               <button onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})" class="btn-secondary px-8 py-3 rounded-lg font-semibold text-lg">
-                   Schedule Demo
-               </button>
-            </div>
+                                             <!-- Stock Status Badge -->
+                                             <div class="absolute bottom-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md shadow-lg"
+                                                  :class="product.inventory_qty > 20 ? 'bg-green-500/90 text-white' : product.inventory_qty > 5 ? 'bg-yellow-500/90 text-white' : 'bg-red-500/90 text-white'">
+                                                 <i class="fas" :class="product.inventory_qty > 20 ? 'fa-check-circle' : 'fa-exclamation-circle'" :=""></i>
+                                                 <span x-text="product.inventory_qty > 20 ? 'In Stock' : product.inventory_qty > 5 ? 'Low Stock' : 'Urgent'"></span>
+                                             </div>
+
+                                             <!-- Hover Button -->
+                                             <button class="absolute bottom-4 right-4 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-lg font-semibold text-sm shadow-lg transform transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0">
+                                                 <i class="fas fa-eye mr-2"></i>View Details
+                                             </button>
+                                         </div>
+                                         
+                                         <!-- Info Section -->
+                                         <div class="p-6 h-full flex flex-col justify-between">
+                                             <!-- Title & Dimensions -->
+                                             <div>
+                                                 <h4 class="font-bold text-slate-100 text-base mb-2 line-clamp-2 group-hover:text-amber-300 transition-colors duration-300" x-text="product.name"></h4>
+                                                 <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-700/30 px-3 py-2 rounded-lg">
+                                                     <i class="fas fa-ruler-combined text-amber-500"></i>
+                                                     <span x-text="`${product.thickness}\" × ${product.width}\" × ${product.length}ft`"></span>
+                                                 </div>
+                                             </div>
+
+                                             <!-- Pricing Section -->
+                                             <div class="space-y-3 pt-4 mt-4 border-t border-slate-600/50">
+                                                 <div class="flex items-end justify-between">
+                                                     <div>
+                                                         <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Per Board Foot</p>
+                                                         <p class="text-2xl font-bold text-amber-400 mt-1" x-text="`₱${parseFloat(product.price_per_board_foot).toFixed(2)}`"></p>
+                                                     </div>
+                                                     <div class="text-right">
+                                                         <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Stock Count</p>
+                                                         <p class="text-lg font-bold" :class="product.inventory_qty > 20 ? 'text-green-400' : product.inventory_qty > 5 ? 'text-yellow-400' : 'text-red-400'" x-text="product.inventory_qty"></p>
+                                                     </div>
+                                                 </div>
+                                                 <template x-if="product.price_per_piece">
+                                                     <div class="bg-slate-700/30 rounded-lg p-3">
+                                                         <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Per Piece</p>
+                                                         <p class="text-lg font-bold text-green-400 mt-1" x-text="`₱${parseFloat(product.price_per_piece).toFixed(2)}`"></p>
+                                                     </div>
+                                                 </template>
+                                             </div>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </template>
+                         </div>
+
+                         <!-- View All Button -->
+                         <div class="text-center mt-16">
+                             {% if user.is_authenticated %}
+                                 <a href="{% url 'products' %}" class="inline-block px-10 py-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:via-orange-700 hover:to-amber-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-600/30 group">
+                                     <i class="fas fa-shopping-cart mr-2 group-hover:mr-3 transition-all"></i>
+                                     Browse Full Catalog
+                                 </a>
+                             {% else %}
+                                 <a href="{% url 'login' %}" class="inline-block px-10 py-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:via-orange-700 hover:to-amber-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-600/30 group">
+                                     <i class="fas fa-lock mr-2 group-hover:mr-3 transition-all"></i>
+                                     Login to Shop
+                                 </a>
+                             {% endif %}
+                         </div>
+                     </div>
+                 </template>
+
+                 <!-- Empty State -->
+                 <template x-if="!isLoading && products.length === 0">
+                     <div class="text-center py-20 bg-gradient-to-br from-slate-800/50 to-slate-800/30 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+                         <div class="w-24 h-24 bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-600/50">
+                             <i class="fas fa-inbox text-4xl text-slate-500"></i>
+                         </div>
+                         <p class="text-slate-400 font-semibold text-lg">No products available</p>
+                         <p class="text-slate-500 text-sm mt-2">Check back soon for our premium lumber selection</p>
+                     </div>
+                 </template>
+             </div>
+         </div>
+     </section>
+
+
+
+    <!-- Capstone Project Footer -->
+    <section class="py-10 relative overflow-hidden bg-slate-900 border-t border-slate-800">
+        <div class="max-w-4xl mx-auto px-6 relative z-10 text-center" data-aos="fade-up">
+            <h2 class="text-2xl font-bold mb-2">Lumber Management System 2025</h2>
         </div>
     </section>
 
@@ -798,7 +882,6 @@
                     <h4 class="font-bold mb-4 text-slate-200">Product</h4>
                     <ul class="space-y-2 text-slate-400 text-sm">
                         <li><a href="#features" class="hover:text-green-400">Features</a></li>
-                        <li><a href="#pricing" class="hover:text-green-400">Pricing</a></li>
                         <li><a href="#" class="hover:text-green-400">Security</a></li>
                     </ul>
                 </div>
@@ -963,6 +1046,65 @@
             }, observerOptions);
 
             counters.forEach(counter => observer.observe(counter));
+        }
+
+        // Landing Products Function
+        function landingProducts() {
+            return {
+                products: [],
+                categories: [],
+                isLoading: false,
+
+                async init() {
+                    await this.loadCategories();
+                    await this.loadProducts();
+                },
+
+                async loadCategories() {
+                    try {
+                        const response = await fetch('/api/categories/');
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.categories = Array.isArray(data) ? data : data.results || [];
+                        }
+                    } catch (error) {
+                        console.error('Error loading categories:', error);
+                    }
+                },
+
+                async loadProducts() {
+                    this.isLoading = true;
+                    try {
+                        const response = await fetch('/api/products/?page_size=8');
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.products = (data.results || data || []).map(p => ({
+                                ...p,
+                                board_feet: this.calculateBoardFeet(p.thickness, p.width, p.length),
+                                inventory_qty: p.inventory?.quantity_pieces || 0,
+                                inventory_board_feet: p.inventory?.total_board_feet || 0,
+                            }));
+                        }
+                    } catch (error) {
+                        console.error('Error loading products:', error);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+
+                calculateBoardFeet(thickness, width, length) {
+                    return (thickness * width * length) / 12;
+                },
+
+                getCategoryLabel(categoryId) {
+                    const category = this.categories.find(c => c.id === categoryId);
+                    return category ? category.name : 'Unknown';
+                },
+
+                viewProduct(id) {
+                    console.log('View product:', id);
+                }
+            };
         }
 
         // Initialize

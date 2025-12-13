@@ -1,0 +1,41 @@
+<!-- Low Stock Alerts -->
+<div id="lowStockAlerts" class="space-y-2"></div>
+
+<script>
+fetch('/api/metrics/low_stock_alerts_comprehensive/')
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('lowStockAlerts');
+        
+        if (data.alerts.length === 0) {
+            container.innerHTML = '<div class="text-gray-500 p-4 text-center">No low stock alerts</div>';
+            return;
+        }
+        
+        const html = data.alerts.map(alert => `
+            <div class="border-l-4 border-yellow-400 bg-yellow-50 p-3 rounded">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="font-semibold text-gray-900">${alert.product_name}</p>
+                        <p class="text-xs text-gray-600">SKU: ${alert.sku}</p>
+                    </div>
+                    <span class="px-2 py-1 bg-yellow-200 text-yellow-800 text-xs rounded font-semibold">
+                        ${alert.board_feet.toFixed(2)} BF
+                    </span>
+                </div>
+                <p class="text-sm text-gray-700 mt-1">
+                    <strong>${alert.quantity_pieces}</strong> pieces • ₱${alert.price_per_bf.toFixed(2)}/BF
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    Est. Value: ₱${(alert.estimated_value).toLocaleString('en-PH', {maximumFractionDigits: 2})}
+                </p>
+            </div>
+        `).join('');
+        
+        container.innerHTML = html;
+    })
+    .catch(error => {
+        document.getElementById('lowStockAlerts').innerHTML = '<div class="text-red-500 p-4">Error loading alerts</div>';
+        console.error('Error:', error);
+    });
+</script>

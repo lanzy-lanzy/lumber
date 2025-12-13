@@ -15,9 +15,9 @@ class DeliveryService:
     
     # Valid status transitions
     VALID_TRANSITIONS = {
-        'pending': ['on_picking', 'cancelled'],
-        'on_picking': ['loaded', 'pending'],
-        'loaded': ['out_for_delivery', 'pending'],
+        'pending': ['on_picking', 'delivered', 'cancelled'],
+        'on_picking': ['loaded', 'delivered', 'pending'],
+        'loaded': ['out_for_delivery', 'delivered', 'pending'],
         'out_for_delivery': ['delivered', 'pending'],
         'delivered': [],
         'cancelled': []

@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from app_sales.models import Customer, SalesOrder, SalesOrderItem, Receipt
 from app_inventory.models import LumberProduct, Inventory
 from app_inventory.services import InventoryService
+from app_sales.notification_models import OrderNotification, OrderConfirmation
 
 
 class SalesService:
@@ -104,6 +105,15 @@ class SalesService:
         so.apply_discount()
         so.save()
         
+        # Create order confirmation
+        from datetime import datetime, timedelta
+        estimated_pickup_date = (datetime.now() + timedelta(days=3)).date()
+        OrderConfirmationService.create_order_confirmation(
+            sales_order_id=so.id,
+            estimated_pickup_date=estimated_pickup_date,
+            created_by=created_by
+        )
+        
         return so
     
 
@@ -160,6 +170,12 @@ class SalesService:
         # Generate receipt number
         receipt.receipt_number = SalesService._generate_receipt_number()
         receipt.save()
+        
+        # Mark payment in confirmation if exists
+        try:
+            OrderConfirmationService.mark_payment_received(sales_order_id=sales_order_id)
+        except:
+            pass  # Confirmation might not exist yet
         
         return so, receipt
     
@@ -257,3 +273,154 @@ class SalesService:
             'all_valid': all_valid,
             'items': results
         }
+
+
+class OrderConfirmationService:
+    """Service for managing order confirmations and notifications"""
+    
+    @staticmethod
+    @transaction.atomic
+    def create_order_confirmation(sales_order_id, estimated_pickup_date=None, created_by=None):
+        """
+        Create order confirmation after sales order is created
+        
+        Args:
+            sales_order_id: ID of the sales order
+            estimated_pickup_date: Date when customer can pick up order
+            created_by: User creating the confirmation
+            
+        Returns:
+            OrderConfirmation: Created confirmation record
+        """
+        sales_order = SalesOrder.objects.get(id=sales_order_id)
+        
+        # Create confirmation record
+        confirmation = OrderConfirmation.objects.create(
+            sales_order=sales_order,
+            customer=sales_order.customer,
+            estimated_pickup_date=estimated_pickup_date,
+            created_by=created_by
+        )
+        
+        # Create initial notification
+        OrderNotification.objects.create(
+            sales_order=sales_order,
+            customer=sales_order.customer,
+            notification_type='order_confirmed',
+            title=f"Order {sales_order.so_number} Confirmed",
+            message=f"Your order {sales_order.so_number} has been successfully created. "
+                   f"We will notify you when it's ready for pickup."
+        )
+        
+        return confirmation
+    
+    @staticmethod
+    @transaction.atomic
+    def confirm_order_ready(sales_order_id):
+        """
+        Mark order as ready for pickup and notify customer
+        
+        Args:
+            sales_order_id: ID of the sales order
+            
+        Returns:
+            OrderConfirmation: Updated confirmation record
+        """
+        confirmation = OrderConfirmation.objects.get(sales_order_id=sales_order_id)
+        confirmation.mark_ready_for_pickup()
+        return confirmation
+    
+    @staticmethod
+    @transaction.atomic
+    def mark_payment_received(sales_order_id):
+        """
+        Mark payment as received for order
+        
+        Args:
+            sales_order_id: ID of the sales order
+            
+        Returns:
+            OrderConfirmation: Updated confirmation record
+        """
+        confirmation = OrderConfirmation.objects.get(sales_order_id=sales_order_id)
+        confirmation.mark_payment_complete()
+        return confirmation
+    
+    @staticmethod
+    def get_customer_pending_pickups(customer_id):
+        """
+        Get all pending pickups for a customer
+        
+        Args:
+            customer_id: ID of the customer
+            
+        Returns:
+            QuerySet: Orders ready for pickup
+        """
+        return OrderConfirmation.objects.filter(
+            customer_id=customer_id,
+            status__in=['confirmed', 'ready_for_pickup']
+        ).select_related('sales_order').order_by('-ready_at', '-confirmed_at')
+    
+    @staticmethod
+    def get_customer_notifications(customer_id, unread_only=True, limit=20):
+        """
+        Get notifications for a customer
+        
+        Args:
+            customer_id: ID of the customer
+            unread_only: If True, only return unread notifications
+            limit: Maximum number of notifications to return
+            
+        Returns:
+            QuerySet: Notifications
+        """
+        query = OrderNotification.objects.filter(customer_id=customer_id)
+        
+        if unread_only:
+            query = query.filter(is_read=False)
+        
+        return query.order_by('-created_at')[:limit]
+    
+    @staticmethod
+    @transaction.atomic
+    def mark_notification_read(notification_id):
+        """
+        Mark a notification as read
+        
+        Args:
+            notification_id: ID of the notification
+            
+        Returns:
+            OrderNotification: Updated notification
+        """
+        notification = OrderNotification.objects.get(id=notification_id)
+        notification.mark_as_read()
+        return notification
+    
+    @staticmethod
+    @transaction.atomic
+    def mark_order_picked_up(sales_order_id):
+        """
+        Mark order as picked up by customer
+        
+        Args:
+            sales_order_id: ID of the sales order
+            
+        Returns:
+            OrderConfirmation: Updated confirmation record
+        """
+        confirmation = OrderConfirmation.objects.get(sales_order_id=sales_order_id)
+        confirmation.mark_picked_up()
+        
+        # Create pickup notification
+        OrderNotification.objects.create(
+            sales_order=confirmation.sales_order,
+            customer=confirmation.customer,
+            notification_type='order_confirmed',
+            title=f"Order {confirmation.sales_order.so_number} Picked Up",
+            message=f"Thank you! Your order {confirmation.sales_order.so_number} has been picked up. "
+                   f"We appreciate your business!"
+        )
+        
+        return confirmation

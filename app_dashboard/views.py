@@ -4,7 +4,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Sum, Count, Q, F, Avg
 from django.utils import timezone
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.core.serializers.json import DjangoJSONEncoder
 from datetime import timedelta
+import json
 from app_dashboard.models import DashboardMetric
 from app_dashboard.serializers import DashboardMetricSerializer
 from app_dashboard.reporting import ComprehensiveReports
@@ -243,3 +247,79 @@ class DashboardMetricViewSet(viewsets.ReadOnlyModelViewSet):
         """Get inventory composition by category"""
         report = ComprehensiveReports.inventory_composition()
         return Response(report)
+
+
+# HTML Views for Dashboard Partials
+@login_required
+def low_stock_alerts_view(request):
+    """Render low stock alerts as HTML"""
+    alerts = ComprehensiveReports.low_stock_alert()
+    return render(request, 'partials/low_stock_alerts_partial.html', {'alerts': alerts})
+
+
+@login_required
+def aged_receivables_view(request):
+    """Render aged receivables as HTML"""
+    days = int(request.GET.get('days', 30))
+    data = ComprehensiveReports.aged_receivables(days_threshold=days)
+    return render(request, 'partials/aged_receivables_partial.html', data)
+
+
+@login_required
+def inventory_composition_view(request):
+    """Render inventory composition as HTML"""
+    data = ComprehensiveReports.inventory_composition()
+    # Ensure all data is JSON-serializable by converting to floats
+    categories = {k: {
+        'value': v['value'],
+        'board_feet': v['board_feet'],
+        'product_count': v['product_count'],
+        'percentage_of_total': v['percentage_of_total'],
+        'products': v['products']
+    } for k, v in data['categories'].items()}
+    
+    context = {
+        'total_inventory_value': data['total_inventory_value'],
+        'total_board_feet': data['total_board_feet'],
+        'categories': json.dumps(categories, cls=DjangoJSONEncoder)
+    }
+    return render(request, 'partials/inventory_composition_partial.html', context)
+
+
+@login_required
+def sales_trend_view(request):
+    """Render sales trend as HTML"""
+    days = int(request.GET.get('days', 30))
+    cutoff_date = timezone.now() - timedelta(days=days)
+    
+    sales_data = SalesOrder.objects.filter(
+        created_at__gte=cutoff_date
+    ).extra(
+        select={'date': 'DATE(created_at)'}
+    ).values('date').annotate(
+        total=Sum('total_amount'),
+        count=Count('id'),
+        avg=Avg('total_amount')
+    ).order_by('date')
+    
+    # Convert data to JSON-serializable format
+    data = []
+    for item in sales_data:
+        data.append({
+            'date': item['date'].isoformat() if item['date'] else None,
+            'total': float(item['total'] or 0),
+            'count': item['count'],
+            'avg': float(item['avg'] or 0)
+        })
+    
+    # Serialize as JSON string
+    data_json = json.dumps(data, cls=DjangoJSONEncoder)
+    return render(request, 'partials/sales_trend_partial.html', {'data': data_json})
+
+
+@login_required
+def supplier_totals_view(request):
+    """Render supplier totals as HTML"""
+    days = int(request.GET.get('days', 30))
+    suppliers = ComprehensiveReports.supplier_analysis(days=days)
+    return render(request, 'partials/supplier_totals_partial.html', {'suppliers': suppliers})

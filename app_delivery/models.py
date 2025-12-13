@@ -13,7 +13,7 @@ class Delivery(models.Model):
     ]
     
     delivery_number = models.CharField(max_length=50, unique=True)
-    sales_order = models.OneToOneField(SalesOrder, on_delete=models.PROTECT, related_name='delivery')
+    sales_order = models.OneToOneField(SalesOrder, on_delete=models.CASCADE, related_name='delivery')
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     

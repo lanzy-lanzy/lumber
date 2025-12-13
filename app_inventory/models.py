@@ -21,7 +21,7 @@ class LumberCategory(models.Model):
 class LumberProduct(models.Model):
     """Lumber product with dimensions and pricing"""
     name = models.CharField(max_length=200)
-    category = models.ForeignKey(LumberCategory, on_delete=models.PROTECT)
+    category = models.ForeignKey(LumberCategory, on_delete=models.CASCADE)
     
     # Dimensions
     thickness = models.DecimalField(max_digits=5, decimal_places=2)  # in inches
@@ -31,6 +31,9 @@ class LumberProduct(models.Model):
     # Pricing
     price_per_board_foot = models.DecimalField(max_digits=10, decimal_places=2)
     price_per_piece = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    
+    # Image
+    image = models.ImageField(upload_to='products/', null=True, blank=True)
     
     sku = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=True)
@@ -77,7 +80,7 @@ class StockTransaction(models.Model):
         ('adjustment', 'Adjustment'),
     ]
     
-    product = models.ForeignKey(LumberProduct, on_delete=models.PROTECT, related_name='stock_transactions')
+    product = models.ForeignKey(LumberProduct, on_delete=models.CASCADE, related_name='stock_transactions')
     transaction_type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
     quantity_pieces = models.IntegerField()
     board_feet = models.DecimalField(max_digits=12, decimal_places=2)

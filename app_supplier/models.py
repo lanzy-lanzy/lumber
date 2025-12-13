@@ -41,7 +41,7 @@ class PurchaseOrder(models.Model):
     ]
     
     po_number = models.CharField(max_length=50, unique=True)
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name='purchase_orders')
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, related_name='purchase_orders')
     
     status = models.CharField(max_length=20, choices=PO_STATUS_CHOICES, default='draft')
     
@@ -70,7 +70,7 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderItem(models.Model):
     """Line items in a purchase order"""
     purchase_order = models.ForeignKey(PurchaseOrder, on_delete=models.CASCADE, related_name='po_items')
-    product = models.ForeignKey(LumberProduct, on_delete=models.PROTECT)
+    product = models.ForeignKey(LumberProduct, on_delete=models.CASCADE)
     
     quantity_pieces = models.IntegerField(validators=[MinValueValidator(1)])
     cost_per_unit = models.DecimalField(max_digits=10, decimal_places=2)

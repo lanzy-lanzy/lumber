@@ -1,0 +1,60 @@
+<!-- Top Suppliers -->
+<div id="supplierTotals" class="overflow-x-auto"></div>
+
+<script>
+fetch('/api/supplier-reports/supplier_totals/')
+    .then(response => response.json())
+    .then(data => {
+        const container = document.getElementById('supplierTotals');
+        
+        if (data.suppliers.length === 0) {
+            container.innerHTML = '<div class="text-gray-500 p-4 text-center">No suppliers</div>';
+            return;
+        }
+        
+        const html = `
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b-2 border-gray-200">
+                        <th class="px-4 py-2 text-left">Company</th>
+                        <th class="px-4 py-2 text-left">Contact</th>
+                        <th class="px-4 py-2 text-right">Total Spent</th>
+                        <th class="px-4 py-2 text-center">Orders</th>
+                        <th class="px-4 py-2 text-center">Fulfillment</th>
+                        <th class="px-4 py-2 text-center">Rating</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.suppliers.map(supplier => `
+                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                            <td class="px-4 py-3 font-semibold text-gray-900">${supplier.company_name}</td>
+                            <td class="px-4 py-3 text-gray-700">${supplier.contact_person}</td>
+                            <td class="px-4 py-3 text-right text-gray-900">₱${supplier.total_spent.toLocaleString('en-PH', {maximumFractionDigits: 2})}</td>
+                            <td class="px-4 py-3 text-center text-gray-700">
+                                <span class="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold">
+                                    ${supplier.po_count}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="px-2 py-1 ${supplier.fulfillment_rate >= 90 ? 'bg-green-100 text-green-700' : supplier.fulfillment_rate >= 70 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'} rounded text-xs font-semibold">
+                                    ${supplier.fulfillment_rate}%
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-center text-gray-700">
+                                <span class="flex items-center justify-center">
+                                    ${Array(Math.round(supplier.delivery_rating)).fill('<i class="fas fa-star text-yellow-400"></i>').join('')}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        
+        container.innerHTML = html;
+    })
+    .catch(error => {
+        document.getElementById('supplierTotals').innerHTML = '<div class="text-red-500 p-4">Error loading suppliers</div>';
+        console.error('Error:', error);
+    });
+</script>

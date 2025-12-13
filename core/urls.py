@@ -1,5 +1,10 @@
 from django.urls import path
-from .views import home, dashboard
+from .views import home, dashboard, customer_dashboard
+from .customer_views import (
+    customer_browse_products, customer_product_detail, 
+    customer_my_orders, customer_order_detail, customer_profile,
+    customer_shopping_cart
+)
 from .frontend_views import (
     categories, products, stock_in, stock_out, stock_adjustment,
     pos, sales_orders,
@@ -8,10 +13,21 @@ from .frontend_views import (
     inventory_reports, sales_reports, delivery_reports
 )
 from app_sales.sales_pdf_views import sales_orders_export_preview, export_sales_orders_pdf
+from app_dashboard.views import (
+    low_stock_alerts_view, aged_receivables_view, inventory_composition_view,
+    sales_trend_view, supplier_totals_view
+)
 
 urlpatterns = [
     path('', home, name='home'),
     path('dashboard/', dashboard, name='dashboard'),
+    path('customer/dashboard/', customer_dashboard, name='customer-dashboard'),
+    path('customer/products/', customer_browse_products, name='customer-browse-products'),
+    path('customer/products/<int:product_id>/', customer_product_detail, name='customer-product-detail'),
+    path('customer/orders/', customer_my_orders, name='customer-my-orders'),
+    path('customer/orders/<int:order_id>/', customer_order_detail, name='customer-order-detail'),
+    path('customer/profile/', customer_profile, name='customer-profile'),
+    path('customer/cart/', customer_shopping_cart, name='customer-shopping-cart'),
     
     # Inventory Routes
     path('inventory/categories/', categories, name='categories'),
@@ -38,4 +54,11 @@ urlpatterns = [
     path('reports/inventory/', inventory_reports, name='inventory-reports'),
     path('reports/sales/', sales_reports, name='sales-reports'),
     path('reports/delivery/', delivery_reports, name='delivery-reports'),
+    
+    # Dashboard Partials Routes
+    path('dashboard/low_stock_alerts/', low_stock_alerts_view, name='dashboard-low-stock-alerts'),
+    path('dashboard/aged_receivables/', aged_receivables_view, name='dashboard-aged-receivables'),
+    path('dashboard/inventory_composition/', inventory_composition_view, name='dashboard-inventory-composition'),
+    path('dashboard/sales_trend/', sales_trend_view, name='dashboard-sales-trend'),
+    path('dashboard/supplier_totals/', supplier_totals_view, name='dashboard-supplier-totals'),
 ]

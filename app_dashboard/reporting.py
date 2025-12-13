@@ -346,7 +346,7 @@ class ComprehensiveReports:
         total_bf = Decimal('0')
         
         for inv in Inventory.objects.select_related('product', 'product__category'):
-            category_name = inv.product.category.get_name_display()
+            category_name = inv.product.category.name
             value = inv.total_board_feet * inv.product.price_per_board_foot
             total_value += value
             total_bf += inv.total_board_feet

@@ -32,8 +32,39 @@
                 </div>
             {% endif %}
 
-            <form method="POST" class="space-y-4">
+            <form method="POST" class="space-y-4" id="registrationForm">
                 {% csrf_token %}
+
+                <!-- User Type Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-slate-300 mb-3">
+                        Register as
+                    </label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
+                            <input
+                                type="radio"
+                                name="user_type"
+                                value="employee"
+                                {% if form_data.user_type == 'employee' or not form_data.user_type %}checked{% endif %}
+                                class="w-4 h-4 text-amber-600"
+                                onchange="toggleUserTypeFields()"
+                            >
+                            <span class="ml-3 text-white text-sm font-medium">Employee</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
+                            <input
+                                type="radio"
+                                name="user_type"
+                                value="customer"
+                                {% if form_data.user_type == 'customer' %}checked{% endif %}
+                                class="w-4 h-4 text-amber-600"
+                                onchange="toggleUserTypeFields()"
+                            >
+                            <span class="ml-3 text-white text-sm font-medium">Customer</span>
+                        </label>
+                    </div>
+                </div>
 
                 <!-- Name Row -->
                 <div class="grid grid-cols-2 gap-4">
@@ -118,8 +149,8 @@
                     <p class="text-xs text-slate-400 mt-1">Optional: 9-15 digits (with or without +)</p>
                 </div>
 
-                <!-- Role Selection -->
-                <div>
+                <!-- Role Selection (Employee Only) -->
+                <div id="roleField" class="hidden">
                     <label for="role" class="block text-sm font-medium text-slate-300 mb-2">
                         User Role
                     </label>
@@ -128,6 +159,7 @@
                         name="role"
                         class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
                     >
+                        <option value="">-- Select a role --</option>
                         {% for value, label in role_choices %}
                             <option value="{{ value }}" {% if form_data.role == value %}selected{% endif %}>
                                 {{ label }}
@@ -137,6 +169,45 @@
                     <p class="text-xs text-slate-400 mt-1">
                         Select your role: Admin, Inventory Manager, Cashier, or Warehouse Staff
                     </p>
+                </div>
+
+                <!-- Address (Customer Only) -->
+                <div id="addressField" class="hidden">
+                    <label for="address" class="block text-sm font-medium text-slate-300 mb-2">
+                        Address
+                    </label>
+                    <textarea
+                        id="address"
+                        name="address"
+                        rows="3"
+                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition resize-none"
+                        placeholder="Your complete address"
+                    >{{ form_data.address }}</textarea>
+                    <p class="text-xs text-slate-400 mt-1">Optional: Provide your delivery address</p>
+                </div>
+
+                <!-- Senior/PWD Status (Customer Only) -->
+                <div id="customerStatusFields" class="hidden grid grid-cols-2 gap-4">
+                    <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
+                        <input
+                            type="checkbox"
+                            name="is_senior"
+                            value="true"
+                            {% if form_data.is_senior == 'true' %}checked{% endif %}
+                            class="w-4 h-4 text-amber-600"
+                        >
+                        <span class="ml-3 text-white text-sm font-medium">Senior Citizen (20% discount)</span>
+                    </label>
+                    <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
+                        <input
+                            type="checkbox"
+                            name="is_pwd"
+                            value="true"
+                            {% if form_data.is_pwd == 'true' %}checked{% endif %}
+                            class="w-4 h-4 text-amber-600"
+                        >
+                        <span class="ml-3 text-white text-sm font-medium">PWD (20% discount)</span>
+                    </label>
                 </div>
 
                 <!-- Password Row -->
@@ -205,5 +276,54 @@
             © 2024 Lumber Management System. All rights reserved.
         </p>
     </div>
+
+    <script>
+        // Toggle fields based on user type selection
+        function toggleUserTypeFields() {
+            const userType = document.querySelector('input[name="user_type"]:checked').value;
+            const roleField = document.getElementById('roleField');
+            const addressField = document.getElementById('addressField');
+            const customerStatusFields = document.getElementById('customerStatusFields');
+            const roleSelect = document.getElementById('role');
+
+            if (userType === 'employee') {
+                roleField.classList.remove('hidden');
+                addressField.classList.add('hidden');
+                customerStatusFields.classList.add('hidden');
+                roleSelect.setAttribute('required', 'required');
+                roleSelect.style.display = 'block';
+                document.getElementById('address').removeAttribute('required');
+            } else if (userType === 'customer') {
+                roleField.classList.add('hidden');
+                addressField.classList.remove('hidden');
+                customerStatusFields.classList.remove('hidden');
+                roleSelect.removeAttribute('required');
+                roleSelect.style.display = 'none';
+                roleSelect.value = '';  // Clear role selection for customers
+            }
+        }
+
+        // Validate form before submission
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            const userType = document.querySelector('input[name="user_type"]:checked').value;
+            const roleSelect = document.getElementById('role');
+            
+            // If employee, ensure role is selected
+            if (userType === 'employee' && !roleSelect.value) {
+                e.preventDefault();
+                alert('Please select a role for employee accounts');
+                roleSelect.focus();
+                return false;
+            }
+            
+            // Form is valid, allow submission
+            return true;
+        });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleUserTypeFields();
+        });
+    </script>
 </body>
 </html>
