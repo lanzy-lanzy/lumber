@@ -78,7 +78,7 @@
             <!-- Mark All as Read Button -->
             {% if unread_count > 0 %}
                 <div class="mb-6">
-                    <form method="post" action="{% url 'mark-all-notifications-read' %}" class="inline">
+                    <form action="{% url 'mark-all-notifications-read' %}" class="inline" onsubmit="handleMarkAllRead(event, this)">
                         {% csrf_token %}
                         <button type="submit" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-lg font-semibold transition flex items-center gap-2">
                             <i class="fas fa-check-double mr-2"></i>Mark All as Read
@@ -215,6 +215,32 @@
         </footer>
     </div>
     <script>
+    function handleMarkAllRead(event, form) {
+        event.preventDefault();
+        
+        const url = form.action;
+        const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                console.error('Error marking all as read:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error marking all as read:', error);
+        });
+    }
+
     function handleNotificationClick(event, element) {
         event.preventDefault();
         

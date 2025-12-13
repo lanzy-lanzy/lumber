@@ -159,3 +159,13 @@ class OrderConfirmation(models.Model):
         self.status = 'picked_up'
         self.picked_up_at = timezone.now()
         self.save()
+
+        # Update Delivery Status to remove from queue
+        try:
+            from app_delivery.models import Delivery
+            delivery = Delivery.objects.get(sales_order=self.sales_order)
+            delivery.status = 'delivered'
+            delivery.delivered_at = timezone.now()
+            delivery.save()
+        except Exception:
+            pass

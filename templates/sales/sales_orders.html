@@ -147,6 +147,7 @@
                                             </button>
                                         </template>
                                         <button @click="markOrderReady(order)" 
+                                            x-show="order.confirmation_status !== 'picked_up' && order.confirmation_status !== 'delivered'"
                                             :disabled="order.confirmation_status === 'ready_for_pickup'"
                                             :class="order.confirmation_status === 'ready_for_pickup' ? 'text-gray-400 cursor-not-allowed' : 'text-purple-600 hover:text-purple-800'"
                                             class="px-2 py-1" 
@@ -683,12 +684,6 @@ function salesOrdersApp() {
                 }
 
                 // Exclude orders moved to delivery queue
-                if (order.confirmation_status === 'ready_for_pickup' || 
-                    order.confirmation_status === 'picked_up' || 
-                    order.confirmation_status === 'delivered') {
-                    return false;
-                }
-
                 return matchesSearch && matchesPaymentType && matchesDateRange;
             });
         },
@@ -754,7 +749,7 @@ function salesOrdersApp() {
 
         calculateItemTotal(index) {
             const item = this.formData.items[index];
-            item.subtotal = (item.quantity_pieces || 0) * (item.unit_price || 0);
+            item.subtotal = (item.quantity_pieces || 0) * (item.board_feet || 1) * (item.unit_price || 0);
             this.calculateOrderSummary();
         },
 

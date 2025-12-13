@@ -113,12 +113,35 @@ class POSViewSet(viewsets.ViewSet):
                 created_by=request.user
             )
             
+            # Ensure amount_paid does not exceed balance for the purpose of the SO record
+            # but we allow amount_tendered to be higher for change calculation.
+            amount_to_pay = min(Decimal(str(so.total_amount - so.discount_amount)), Decimal(str(amount_tendered)))
+            
             # Process payment
             so, receipt = SalesService.process_payment(
                 sales_order_id=so.id,
-                amount_paid=amount_tendered,
+                amount_paid=amount_to_pay,
                 created_by=request.user
             )
+            
+            # Update receipt with actual tendered amount if different
+            if Decimal(str(amount_tendered)) > amount_to_pay:
+                receipt.amount_tendered = Decimal(str(amount_tendered))
+                receipt.change = receipt.amount_tendered - (so.total_amount - so.discount_amount)
+                receipt.save()
+
+            # Auto-mark as Picked Up for POS transactions (Walk-in)
+            try:
+                from app_sales.services import OrderConfirmationService
+                # First ensure it has a confirmation record (created in create_sales_order)
+                # Then mark as ready and picked up
+                confirmation = so.confirmation
+                confirmation.mark_payment_complete()
+                confirmation.mark_ready_for_pickup() 
+                confirmation.mark_picked_up()
+            except Exception as e:
+                # Log error but don't fail transaction
+                print(f"Error auto-marking pickup for POS {so.so_number}: {e}")
             
             return Response({
                 'status': 'success',
