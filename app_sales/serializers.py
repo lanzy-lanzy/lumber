@@ -23,14 +23,15 @@ class SalesOrderSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True)
     confirmation_status = serializers.SerializerMethodField()
+    order_source_display = serializers.CharField(source='get_order_source_display', read_only=True)
     
     class Meta:
         model = SalesOrder
         fields = ['id', 'so_number', 'customer', 'customer_name', 'total_amount', 'discount', 
                   'discount_amount', 'payment_type', 'amount_paid', 'balance', 'notes',
                   'sales_order_items', 'created_by', 'created_by_name', 'created_at', 'updated_at',
-                  'confirmation_status']
-        read_only_fields = ['id', 'so_number', 'created_by', 'created_at', 'updated_at', 'confirmation_status']
+                  'confirmation_status', 'order_source', 'order_source_display']
+        read_only_fields = ['id', 'so_number', 'created_by', 'created_at', 'updated_at', 'confirmation_status', 'order_source_display']
     
     def get_confirmation_status(self, obj):
         """Get the confirmation status for this order"""

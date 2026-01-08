@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Create Service Order{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Create New Service Order</h1>
+        <p class="text-gray-600 mt-2">Register customer wood for milling</p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        {% if error %}
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+            <p class="text-red-700 font-medium"><i class="fas fa-exclamation-circle mr-2"></i>{{ error }}</p>
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate class="p-8">
+            {% csrf_token %}
+
+            <!-- Customer & Date Section -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-user-circle text-amber-600 mr-3"></i>
+                    Customer Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="customer" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Customer
+                        </label>
+                        <div class="flex gap-2">
+                            <select
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                id="customer" name="customer">
+                                <option value="">-- Select a customer --</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}">{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" id="walkinBtn"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-medium"
+                                title="Create Walk-in Customer">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="received_date" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Received Date
+                        </label>
+                        <input type="date"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            id="received_date" name="received_date" required>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 my-8"></div>
+
+            <!-- Wood Information Section -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-tree text-green-600 mr-3"></i>
+                    Wood Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="wood_type" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Wood Type
+                        </label>
+                        <input type="text"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            id="wood_type" name="wood_type" placeholder="e.g., Mahogany, Pine, Oak" required>
+                    </div>
+
+                    <div>
+                        <label for="quantity_logs" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Number of Logs
+                        </label>
+                        <input type="number"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            id="quantity_logs" name="quantity_logs" min="1" required>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <label for="estimated_board_feet" class="block text-sm font-medium text-gray-700 mb-2">Estimated
+                        Board Feet (Optional)</label>
+                    <input type="number"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        id="estimated_board_feet" name="estimated_board_feet" step="0.01" min="0"
+                        placeholder="Estimate only">
+                    <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i> Actual board feet will
+                        be calculated from output</p>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 my-8"></div>
+
+            <!-- Service Configuration Section -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-cog text-blue-600 mr-3"></i>
+                    Service Configuration
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="service_fee_per_bf" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Service Fee per Board Foot
+                        </label>
+                        <div class="flex items-center">
+                            <span
+                                class="px-4 py-2 bg-gray-100 border border-gray-300 border-r-0 rounded-l-lg text-gray-700 font-medium">₱</span>
+                            <input type="number"
+                                class="flex-1 px-4 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                                id="service_fee_per_bf" name="service_fee_per_bf" value="5.00" step="0.01" min="0"
+                                required>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="shavings_ownership" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Shavings Ownership
+                        </label>
+                        <select
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                            id="shavings_ownership" name="shavings_ownership" required>
+                            <option value="customer">Customer Gets All</option>
+                            <option value="lumber_company" selected>Lumber Company Gets All</option>
+                            <option value="shared">Shared (50/50 Split)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 my-8"></div>
+
+            <!-- Notes Section -->
+            <div class="mb-8">
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Additional Notes
+                    (Optional)</label>
+                <textarea
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    id="notes" name="notes" rows="4"
+                    placeholder="Any special instructions, quality notes, or special requirements..."></textarea>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="border-t border-gray-200 pt-8 flex gap-3">
+                <button type="submit" id="submitBtn"
+                    class="inline-flex items-center px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition duration-200 font-medium shadow-md">
+                    <i class="fas fa-save mr-2"></i>
+                    <span>Create Service Order</span>
+                </button>
+                <a href="{% url 'lumbering_service:order_list' %}"
+                    class="inline-flex items-center px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-medium">
+                    <i class="fas fa-times mr-2"></i>
+                    <span>Cancel</span>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Walk-in Customer Modal -->
+<div id="walkinModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Create Walk-in Customer</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-600" id="closeModal">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form id="walkinForm" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="walkinName" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-star text-red-500"></i> Full Name
+                </label>
+                <input type="text" id="walkinName" name="name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Customer name" required>
+            </div>
+
+            <div>
+                <label for="walkinPhone" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-star text-red-500"></i> Phone Number
+                </label>
+                <input type="tel" id="walkinPhone" name="phone_number"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="09xxxxxxxxx" required>
+            </div>
+
+            <div>
+                <label for="walkinEmail" class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                <input type="email" id="walkinEmail" name="email"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="customer@example.com">
+            </div>
+
+            <div>
+                <label for="walkinAddress" class="block text-sm font-medium text-gray-700 mb-1">Address
+                    (Optional)</label>
+                <textarea id="walkinAddress" name="address"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    rows="2" placeholder="Street address..."></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-medium">
+                    <i class="fas fa-save mr-2"></i>Create Customer
+                </button>
+                <button type="button" id="cancelModal"
+                    class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-medium">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const receivedDate = document.getElementById('received_date');
+        const today = new Date().toISOString().split('T')[0];
+        receivedDate.value = today;
+
+        // Walk-in customer modal handling
+        const walkinBtn = document.getElementById('walkinBtn');
+        const walkinModal = document.getElementById('walkinModal');
+        const closeModal = document.getElementById('closeModal');
+        const cancelModal = document.getElementById('cancelModal');
+        const walkinForm = document.getElementById('walkinForm');
+        const customerSelect = document.getElementById('customer');
+        const submitBtn = document.getElementById('submitBtn');
+
+        // Form submission validation
+        document.querySelector('form').addEventListener('submit', function (e) {
+            if (!customerSelect.value) {
+                e.preventDefault();
+                showAlert('Please select or create a customer', 'error');
+            }
+        });
+
+        walkinBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            walkinModal.classList.remove('hidden');
+            // Focus on name field
+            setTimeout(() => document.getElementById('walkinName').focus(), 100);
+        });
+
+        [closeModal, cancelModal].forEach(btn => {
+            btn.addEventListener('click', function () {
+                walkinModal.classList.add('hidden');
+            });
+        });
+
+        walkinForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('walkinName').value);
+            formData.append('phone_number', document.getElementById('walkinPhone').value);
+            formData.append('email', document.getElementById('walkinEmail').value);
+            formData.append('address', document.getElementById('walkinAddress').value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            try {
+                const response = await fetch('{% url "lumbering_service:api_create_walkin_customer" %}', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Add new customer to dropdown
+                    const option = document.createElement('option');
+                    option.value = data.id;
+                    option.textContent = data.name;
+                    option.selected = true;
+                    customerSelect.appendChild(option);
+
+                    // Close modal and reset form
+                    walkinModal.classList.add('hidden');
+                    walkinForm.reset();
+
+                    // Show success message
+                    showAlert('Walk-in customer created successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.message || 'Error creating customer', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error creating customer', 'error');
+            }
+        });
+
+        // Close modal when clicking outside
+        walkinModal.addEventListener('click', function (e) {
+            if (e.target === walkinModal) {
+                walkinModal.classList.add('hidden');
+            }
+        });
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+        alertDiv.textContent = message;
+        document.body.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+</script>
+{% endblock %}

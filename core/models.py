@@ -37,6 +37,13 @@ class CustomUser(AbstractUser):
         validators=[RegexValidator(r'^\+?1?\d{9,15}$')]
     )
     is_active = models.BooleanField(default=True)
+    is_approved = models.BooleanField(default=False, help_text="Admin approval for customer registration")
+    id_document = models.FileField(
+        upload_to='id_documents/',
+        blank=True,
+        null=True,
+        help_text="Upload government ID or valid identification"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

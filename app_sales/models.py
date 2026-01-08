@@ -37,10 +37,16 @@ class SalesOrder(models.Model):
         ('credit', 'Credit (SOA)'),
     ]
     
+    ORDER_SOURCE_CHOICES = [
+        ('customer_order', 'Customer Order'),
+        ('point_of_sale', 'Point of Sale / Walk-in'),
+    ]
+    
     SO_NUMBER_PATTERN = 'SO-'  # Will be auto-generated
     
     so_number = models.CharField(max_length=50, unique=True, null=True, blank=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='sales_orders')
+    order_source = models.CharField(max_length=20, choices=ORDER_SOURCE_CHOICES, default='point_of_sale')
     
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=6, decimal_places=2, default=0)  # percentage

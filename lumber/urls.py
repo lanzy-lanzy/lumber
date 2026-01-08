@@ -18,6 +18,13 @@ from app_delivery.report_views import DeliveryReportViewSet
 from app_delivery.warehouse import WarehouseViewSet
 from app_supplier.views import SupplierViewSet, PurchaseOrderViewSet, SupplierPriceHistoryViewSet
 from app_supplier.report_views import SupplierReportViewSet
+from app_round_wood.views import (
+    WoodTypeViewSet, RoundWoodPurchaseViewSet,
+    RoundWoodInventoryViewSet
+)
+from app_lumbering_service.views import (
+    LumberingServiceOrderViewSet, LumberingServiceOutputViewSet, ShavingsRecordViewSet
+)
 from app_dashboard.views import DashboardMetricViewSet
 
 # Create router and register viewsets
@@ -55,6 +62,16 @@ router.register(r'purchase-orders', PurchaseOrderViewSet, basename='purchase-ord
 router.register(r'supplier-prices', SupplierPriceHistoryViewSet, basename='supplier-price')
 router.register(r'supplier-reports', SupplierReportViewSet, basename='supplier-report')
 
+# Round Wood Purchasing (Simplified)
+router.register(r'wood-types', WoodTypeViewSet, basename='wood-type')
+router.register(r'round-wood-purchases', RoundWoodPurchaseViewSet, basename='round-wood-purchase')
+router.register(r'round-wood-inventory', RoundWoodInventoryViewSet, basename='round-wood-inventory')
+
+# Lumbering Service
+router.register(r'lumbering-service-orders', LumberingServiceOrderViewSet, basename='lumbering-service-order')
+router.register(r'lumbering-service-outputs', LumberingServiceOutputViewSet, basename='lumbering-service-output')
+router.register(r'shavings-records', ShavingsRecordViewSet, basename='shavings-record')
+
 # Dashboard
 router.register(r'metrics', DashboardMetricViewSet, basename='metric')
 
@@ -66,6 +83,8 @@ urlpatterns = [
     path('api-auth/', include('rest_framework.urls')),
     path('inventory/management/', include('app_inventory.management_urls')),
     path('', include('app_sales.notification_urls')),
+    path('round-wood/', include('app_round_wood.urls_ui')),
+    path('lumbering/', include('app_lumbering_service.urls')),
 ]
 
 # Serve media files in development

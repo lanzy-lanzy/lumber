@@ -1,0 +1,332 @@
+{% extends "base.html" %}
+
+{% block title %}Round Wood - New Purchase{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Record Round Wood Purchase</h1>
+        <p class="text-gray-500 mt-1">Enter supplier and log details, then save to update inventory</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Supplier Section -->
+            <fieldset class="border-b pb-6">
+                <legend class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-building text-blue-500 mr-2"></i>
+                    Supplier Information
+                </legend>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Supplier *</label>
+                    <div class="flex gap-2">
+                        <select name="supplier_id" id="supplier_id"
+                            class="flex-1 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">-- Select Supplier --</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.company_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="walkinSupplierBtn"
+                            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-medium"
+                            title="Create New Supplier">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Wood Details Section -->
+            <fieldset class="border-b pb-6">
+                <legend class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-tree text-green-500 mr-2"></i>
+                    Wood Details
+                </legend>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Wood Type *</label>
+                        <select name="wood_type_id" required
+                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">-- Select Wood Type --</option>
+                            {% for wood_type in wood_types %}
+                            <option value="{{ wood_type.id }}">{{ wood_type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Number of Logs *</label>
+                        <input type="number" name="quantity_logs" min="1" required
+                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="e.g., 50">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Diameter (inches) *</label>
+                            <input type="number" name="diameter_inches" step="0.1" min="0" required
+                                class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="e.g., 12.5">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Length (feet) *</label>
+                            <input type="number" name="length_feet" step="0.1" min="0" required
+                                class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="e.g., 16">
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Pricing Section -->
+            <fieldset class="border-b pb-6">
+                <legend class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-money-bill text-orange-500 mr-2"></i>
+                    Pricing
+                </legend>
+
+                <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+                    <p class="text-sm text-blue-800">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Volume will be calculated automatically. Total cost = Volume × Unit Cost
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unit Cost (Per Cubic Foot) *</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-2 text-gray-600">₱</span>
+                        <input type="number" name="unit_cost_per_cubic_foot" step="0.01" min="0" required
+                            class="w-full border border-gray-300 rounded-lg p-2 pl-6 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="0.00">
+                    </div>
+                </div>
+            </fieldset>
+
+            <!-- Purchase Date Section -->
+            <fieldset class="border-b pb-6">
+                <legend class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-calendar text-purple-500 mr-2"></i>
+                    Purchase Date
+                </legend>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+                    <input type="date" name="purchase_date" value="{{ today }}" required
+                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+            </fieldset>
+
+            <!-- Notes Section -->
+            <fieldset>
+                <legend class="text-lg font-semibold text-gray-900 mb-4">
+                    <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>
+                    Additional Notes
+                </legend>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                    <textarea name="notes" rows="3" placeholder="Any special notes about this purchase..."
+                        class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Optional</p>
+                </div>
+            </fieldset>
+
+            <!-- Process Flow Info -->
+            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
+                <h3 class="font-semibold text-green-900 mb-2">
+                    <i class="fas fa-check-circle mr-2"></i>Process Flow
+                </h3>
+                <ol class="text-sm text-green-800 space-y-1 ml-6 list-decimal">
+                    <li>Enter supplier info (who sold the logs)</li>
+                    <li>Record wood details (type, quantity, size)</li>
+                    <li>Input cost and date</li>
+                    <li>Click "Save Purchase" - volume and total cost calculated automatically</li>
+                    <li>Purchase will be added to inventory after completion</li>
+                </ol>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end gap-3 pt-6 border-t border-gray-200">
+                <a href="{% url 'round_wood:purchase_list' %}"
+                    class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-gray-700">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                    <i class="fas fa-check mr-2"></i>Save Purchase
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Back Link -->
+    <div>
+        <a href="{% url 'round_wood:purchase_list' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Purchases
+        </a>
+    </div>
+</div>
+
+<!-- Walk-in Supplier Modal -->
+<div id="walkinSupplierModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Create New Supplier</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-600" id="closeSupplierModal">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form id="walkinSupplierForm" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="supplierCompanyName" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-star text-red-500"></i> Company Name
+                </label>
+                <input type="text" id="supplierCompanyName" name="company_name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Company name" required>
+            </div>
+
+            <div>
+                <label for="supplierContactPerson" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-star text-red-500"></i> Contact Person
+                </label>
+                <input type="text" id="supplierContactPerson" name="contact_person"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Contact person name" required>
+            </div>
+
+            <div>
+                <label for="supplierPhone" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-star text-red-500"></i> Phone Number
+                </label>
+                <input type="tel" id="supplierPhone" name="phone_number"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="09xxxxxxxxx" required>
+            </div>
+
+            <div>
+                <label for="supplierEmail" class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
+                <input type="email" id="supplierEmail" name="email"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="supplier@example.com">
+            </div>
+
+            <div>
+                <label for="supplierAddress" class="block text-sm font-medium text-gray-700 mb-1">Address
+                    (Optional)</label>
+                <textarea id="supplierAddress" name="address"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    rows="2" placeholder="Street address..."></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-medium">
+                    <i class="fas fa-save mr-2"></i>Create Supplier
+                </button>
+                <button type="button" id="cancelSupplierModal"
+                    class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-medium">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const walkinSupplierBtn = document.getElementById('walkinSupplierBtn');
+        const walkinSupplierModal = document.getElementById('walkinSupplierModal');
+        const closeSupplierModal = document.getElementById('closeSupplierModal');
+        const cancelSupplierModal = document.getElementById('cancelSupplierModal');
+        const walkinSupplierForm = document.getElementById('walkinSupplierForm');
+        const supplierSelect = document.getElementById('supplier_id');
+
+        // Modal management
+        walkinSupplierBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            walkinSupplierModal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('supplierCompanyName').focus(), 100);
+        });
+
+        [closeSupplierModal, cancelSupplierModal].forEach(btn => {
+            btn.addEventListener('click', function () {
+                walkinSupplierModal.classList.add('hidden');
+            });
+        });
+
+        // Form submission
+        walkinSupplierForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('company_name', document.getElementById('supplierCompanyName').value);
+            formData.append('contact_person', document.getElementById('supplierContactPerson').value);
+            formData.append('phone_number', document.getElementById('supplierPhone').value);
+            formData.append('email', document.getElementById('supplierEmail').value);
+            formData.append('address', document.getElementById('supplierAddress').value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            try {
+                const response = await fetch('{% url "round_wood:api_create_walkin_supplier" %}', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Add new supplier to dropdown
+                    const option = document.createElement('option');
+                    option.value = data.id;
+                    option.textContent = data.company_name;
+                    option.selected = true;
+                    supplierSelect.appendChild(option);
+
+                    // Close modal and reset form
+                    walkinSupplierModal.classList.add('hidden');
+                    walkinSupplierForm.reset();
+
+                    // Show success message
+                    showAlert('Supplier created successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.message || 'Error creating supplier', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error creating supplier', 'error');
+            }
+        });
+
+        // Close modal when clicking outside
+        walkinSupplierModal.addEventListener('click', function (e) {
+            if (e.target === walkinSupplierModal) {
+                walkinSupplierModal.classList.add('hidden');
+            }
+        });
+    });
+
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+        alertDiv.textContent = message;
+        document.body.appendChild(alertDiv);
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 3000);
+    }
+</script>
+
+{% endblock %}

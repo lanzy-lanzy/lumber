@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Round Wood - Wood Types{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Wood Types</h1>
+        <p class="text-gray-500 mt-1">Available round wood species and varieties</p>
+    </div>
+
+    <!-- Wood Types Grid -->
+    {% if wood_types %}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% for wood_type in wood_types %}
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 {% if wood_type.is_active %}border-green-500{% else %}border-gray-300{% endif %}">
+            <div class="flex items-start justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">{{ wood_type.name }}</h3>
+                    <p class="text-sm text-gray-600 mt-1">{{ wood_type.get_species_display }}</p>
+                </div>
+                {% if wood_type.is_active %}
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">Active</span>
+                {% else %}
+                    <span class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">Inactive</span>
+                {% endif %}
+            </div>
+
+            {% if wood_type.description %}
+            <p class="text-sm text-gray-600 mb-4">{{ wood_type.description }}</p>
+            {% endif %}
+
+            <div class="space-y-2 mb-4 p-3 bg-gray-50 rounded">
+                {% if wood_type.default_diameter_inches %}
+                <div class="text-sm">
+                    <span class="text-gray-600">Default Diameter:</span>
+                    <span class="font-medium text-gray-900">{{ wood_type.default_diameter_inches|floatformat:1 }}"</span>
+                </div>
+                {% endif %}
+                
+                {% if wood_type.default_length_feet %}
+                <div class="text-sm">
+                    <span class="text-gray-600">Default Length:</span>
+                    <span class="font-medium text-gray-900">{{ wood_type.default_length_feet|floatformat:1 }}' ft</span>
+                </div>
+                {% endif %}
+
+                {% if not wood_type.default_diameter_inches and not wood_type.default_length_feet %}
+                <p class="text-sm text-gray-500 italic">No defaults set</p>
+                {% endif %}
+            </div>
+
+            <div class="text-xs text-gray-500">
+                <i class="fas fa-calendar mr-1"></i>Added {{ wood_type.created_at|date:"M d, Y" }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <i class="fas fa-tree text-gray-300 text-4xl mb-4 block"></i>
+        <p class="text-gray-500 text-lg">No wood types found</p>
+        <p class="text-gray-600 text-sm mt-2">Add wood types through the admin panel</p>
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    <div class="flex gap-3">
+        <a href="{% url 'round_wood:dashboard' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% endblock %}

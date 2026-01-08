@@ -507,15 +507,16 @@ function posApp() {
             alert('Keypad feature coming soon');
         },
 
-        resetCart() {
-            if (confirm('Clear the entire cart?')) {
-                this.cart = [];
-                this.selectedCustomer = { id: null, name: '', phone_number: '', is_senior: false, is_pwd: false };
-                this.paymentData = { payment_type: 'cash', amount_paid: 0, change: 0 };
-                this.searchCustomer = '';
-                this.calculateSummary();
-            }
-        },
+        resetCart(skipConfirm = false) {
+             if (!skipConfirm && !confirm('Clear the entire cart?')) {
+                 return;
+             }
+             this.cart = [];
+             this.selectedCustomer = { id: null, name: '', phone_number: '', is_senior: false, is_pwd: false };
+             this.paymentData = { payment_type: 'cash', amount_paid: 0, change: 0 };
+             this.searchCustomer = '';
+             this.calculateSummary();
+         },
 
         async completeSale() {
             if (this.cart.length === 0 || !this.selectedCustomer.id) {
@@ -580,123 +581,145 @@ function posApp() {
         },
 
         newTransaction() {
-            this.showReceiptModal = false;
-            this.receipt = null;
-            this.resetCart();
-        },
+             this.showReceiptModal = false;
+             this.receipt = null;
+             this.resetCart(true); // Auto-clear without confirmation
+         },
 
         printReceipt() {
-            if (!this.receipt) return;
-            
-            const printWindow = window.open('', '_blank', 'width=400,height=600');
-            const receiptHTML = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <title>Receipt - ${this.receipt.receipt_number}</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; margin: 0; padding: 10px; }
-                        .receipt { width: 80mm; margin: 0 auto; }
-                        .header { text-align: center; font-weight: bold; margin-bottom: 10px; }
-                        .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
-                        .row { display: flex; justify-content: space-between; font-size: 12px; }
-                        .label { font-weight: bold; }
-                        .items { margin: 10px 0; }
-                        .item-row { display: flex; justify-content: space-between; font-size: 11px; }
-                        .total-row { font-size: 13px; font-weight: bold; }
-                        .footer { text-align: center; font-size: 10px; margin-top: 10px; }
-                        @media print {
-                            body { margin: 0; padding: 0; }
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt">
-                        <div class="header">
-                            <div>LUMBER MANAGEMENT SYSTEM</div>
-                            <div style="font-size: 10px;">Receipt</div>
-                        </div>
-                        
-                        <div class="divider"></div>
-                        
-                        <div style="font-size: 11px;">
-                            <div class="row"><span class="label">Receipt #:</span><span>${this.receipt.receipt_number}</span></div>
-                            <div class="row"><span class="label">Date:</span><span>${new Date(this.receipt.created_at).toLocaleDateString()}</span></div>
-                            <div class="row"><span class="label">Time:</span><span>${new Date(this.receipt.created_at).toLocaleTimeString()}</span></div>
-                        </div>
-                        
-                        <div class="divider"></div>
-                        
-                        <div style="font-size: 11px;">
-                            <div class="row"><span class="label">Customer:</span></div>
-                            <div style="text-align: center; margin: 5px 0;">${this.receipt.customer_name}</div>
-                        </div>
-                        
-                        <div class="divider"></div>
-                        
-                        <div class="items">
-                            ${this.receipt.items.map(item => `
-                                <div class="item-row">
-                                    <span>${item.product_name}</span>
-                                    <span>${item.quantity_pieces}x</span>
-                                </div>
-                                <div class="item-row" style="justify-content: flex-end; padding-right: 20px;">
-                                    ₱${item.subtotal.toFixed(2)}
-                                </div>
-                            `).join('')}
-                        </div>
-                        
-                        <div class="divider"></div>
-                        
-                        <div style="font-size: 12px;">
-                            <div class="row">
-                                <span>Subtotal:</span>
-                                <span>₱${this.receipt.subtotal.toFixed(2)}</span>
-                            </div>
-                            ${this.receipt.discount_amount > 0 ? `
-                                <div class="row" style="color: green;">
-                                    <span>Discount (20%):</span>
-                                    <span>-₱${this.receipt.discount_amount.toFixed(2)}</span>
-                                </div>
-                            ` : ''}
-                            <div class="divider"></div>
-                            <div class="row total-row">
-                                <span>TOTAL:</span>
-                                <span>₱${this.receipt.total_amount.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="divider"></div>
-                        
-                        <div style="font-size: 11px;">
-                            <div class="row">
-                                <span class="label">Amount Paid:</span>
-                                <span>₱${this.receipt.amount_paid.toFixed(2)}</span>
-                            </div>
-                            <div class="row">
-                                <span class="label">Change:</span>
-                                <span>₱${this.receipt.change.toFixed(2)}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="footer">
-                            <div style="margin-top: 20px;">Thank you for your purchase!</div>
-                            <div>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
-                        </div>
-                    </div>
-                </body>
-                </html>
-            `;
-            
-            printWindow.document.write(receiptHTML);
-            printWindow.document.close();
-            
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 250);
-        },
+             if (!this.receipt) return;
+             
+             const printWindow = window.open('', '_blank', 'width=400,height=600');
+             const self = this; // Preserve context
+             const receiptHTML = `
+                 <!DOCTYPE html>
+                 <html>
+                 <head>
+                     <meta charset="UTF-8">
+                     <title>Receipt - ${this.receipt.receipt_number}</title>
+                     <style>
+                         body { font-family: 'Courier New', monospace; margin: 0; padding: 10px; }
+                         .receipt { width: 80mm; margin: 0 auto; }
+                         .header { text-align: center; font-weight: bold; margin-bottom: 10px; }
+                         .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
+                         .row { display: flex; justify-content: space-between; font-size: 12px; }
+                         .label { font-weight: bold; }
+                         .items { margin: 10px 0; }
+                         .item-row { display: flex; justify-content: space-between; font-size: 11px; }
+                         .total-row { font-size: 13px; font-weight: bold; }
+                         .footer { text-align: center; font-size: 10px; margin-top: 10px; }
+                         @media print {
+                             body { margin: 0; padding: 0; }
+                         }
+                     </style>
+                 </head>
+                 <body>
+                     <div class="receipt">
+                         <div class="header">
+                             <div>LUMBER MANAGEMENT SYSTEM</div>
+                             <div style="font-size: 10px;">Receipt</div>
+                         </div>
+                         
+                         <div class="divider"></div>
+                         
+                         <div style="font-size: 11px;">
+                             <div class="row"><span class="label">Receipt #:</span><span>${this.receipt.receipt_number}</span></div>
+                             <div class="row"><span class="label">Date:</span><span>${new Date(this.receipt.created_at).toLocaleDateString()}</span></div>
+                             <div class="row"><span class="label">Time:</span><span>${new Date(this.receipt.created_at).toLocaleTimeString()}</span></div>
+                         </div>
+                         
+                         <div class="divider"></div>
+                         
+                         <div style="font-size: 11px;">
+                             <div class="row"><span class="label">Customer:</span></div>
+                             <div style="text-align: center; margin: 5px 0;">${this.receipt.customer_name}</div>
+                         </div>
+                         
+                         <div class="divider"></div>
+                         
+                         <div class="items">
+                             ${this.receipt.items.map(item => `
+                                 <div class="item-row">
+                                     <span>${item.product_name}</span>
+                                     <span>${item.quantity_pieces}x</span>
+                                 </div>
+                                 <div class="item-row" style="justify-content: flex-end; padding-right: 20px;">
+                                     ₱${item.subtotal.toFixed(2)}
+                                 </div>
+                             `).join('')}
+                         </div>
+                         
+                         <div class="divider"></div>
+                         
+                         <div style="font-size: 12px;">
+                             <div class="row">
+                                 <span>Subtotal:</span>
+                                 <span>₱${this.receipt.subtotal.toFixed(2)}</span>
+                             </div>
+                             ${this.receipt.discount_amount > 0 ? `
+                                 <div class="row" style="color: green;">
+                                     <span>Discount (20%):</span>
+                                     <span>-₱${this.receipt.discount_amount.toFixed(2)}</span>
+                                 </div>
+                             ` : ''}
+                             <div class="divider"></div>
+                             <div class="row total-row">
+                                 <span>TOTAL:</span>
+                                 <span>₱${this.receipt.total_amount.toFixed(2)}</span>
+                             </div>
+                         </div>
+                         
+                         <div class="divider"></div>
+                         
+                         <div style="font-size: 11px;">
+                             <div class="row">
+                                 <span class="label">Amount Paid:</span>
+                                 <span>₱${this.receipt.amount_paid.toFixed(2)}</span>
+                             </div>
+                             <div class="row">
+                                 <span class="label">Change:</span>
+                                 <span>₱${this.receipt.change.toFixed(2)}</span>
+                             </div>
+                         </div>
+                         
+                         <div class="footer">
+                             <div style="margin-top: 20px;">Thank you for your purchase!</div>
+                             <div>${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+                         </div>
+                     </div>
+                 </body>
+                 </html>
+             `;
+             
+             printWindow.document.write(receiptHTML);
+             printWindow.document.close();
+             
+             setTimeout(() => {
+                 printWindow.print();
+                 
+                 // Poll to detect when print window closes
+                 const checkClosed = setInterval(() => {
+                     try {
+                         if (printWindow.closed) {
+                             clearInterval(checkClosed);
+                             // Close the receipt modal and start new transaction
+                             self.newTransaction();
+                         }
+                     } catch (e) {
+                         clearInterval(checkClosed);
+                     }
+                 }, 100);
+                 
+                 // Safety timeout in case polling doesn't work
+                 setTimeout(() => {
+                     clearInterval(checkClosed);
+                     if (!printWindow.closed) {
+                         printWindow.close();
+                     }
+                     self.newTransaction();
+                 }, 3000);
+             }, 250);
+         },
 
         getCSRFToken() {
             return document.querySelector('[name=csrfmiddlewaretoken]')?.value ||

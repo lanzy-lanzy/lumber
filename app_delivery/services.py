@@ -2,7 +2,7 @@
 Delivery management services
 """
 from decimal import Decimal
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from datetime import datetime
@@ -71,6 +71,45 @@ class DeliveryService:
         today = datetime.now().strftime('%Y%m%d')
         count = Delivery.objects.filter(delivery_number__startswith=f'DLV-{today}').count() + 1
         return f'DLV-{today}-{count:04d}'
+
+    @staticmethod
+    @transaction.atomic
+    def create_delivery_for_order(sales_order, created_by=None, max_retries=5):
+        """Create a Delivery for the given SalesOrder, retrying on unique constraint failures.
+
+        Returns the Delivery instance. If a Delivery already exists for the order, returns it.
+        Raises IntegrityError if unable to create a unique delivery number after retries.
+        """
+        try:
+            return Delivery.objects.get(sales_order=sales_order)
+        except Delivery.DoesNotExist:
+            pass
+
+        # Try generating and inserting a unique delivery_number, retrying on conflicts
+        for _ in range(max_retries):
+            delivery_number = DeliveryService._generate_delivery_number()
+            try:
+                delivery = Delivery.objects.create(
+                    sales_order=sales_order,
+                    status='pending',
+                    delivery_number=delivery_number
+                )
+
+                # Create initial log entry
+                DeliveryLog.objects.create(
+                    delivery=delivery,
+                    status='pending',
+                    notes=f'Delivery created for {sales_order.so_number}',
+                    updated_by=created_by
+                )
+
+                return delivery
+            except IntegrityError:
+                # Another process created the same delivery_number, retry
+                continue
+
+        # If we reach here, retries exhausted
+        raise IntegrityError('Could not generate a unique delivery_number after retries')
     
     @staticmethod
     @transaction.atomic

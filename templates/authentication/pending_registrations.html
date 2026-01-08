@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}Pending Registrations - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="bg-white rounded-lg shadow-sm p-6 border-l-4 border-blue-600">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            <i class="fas fa-user-check text-blue-600 mr-3"></i>
+            Pending Customer Registrations
+        </h1>
+        <p class="text-gray-600 mt-2">Review and approve/reject pending customer registrations</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-hourglass-half text-yellow-600 text-2xl"></i>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Pending Approvals</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-file-pdf text-red-600 text-2xl"></i>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">ID Documents Required</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-clock text-blue-600 text-2xl"></i>
+                </div>
+                <div class="ml-5">
+                    <p class="text-sm font-medium text-gray-500">Action Required</p>
+                    <p class="text-3xl font-bold text-gray-900">{{ pending_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Registrations Table -->
+    {% if pending_users %}
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Registrations Awaiting Review</h2>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Full Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Email</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Username</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Phone</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">ID Document</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Submitted</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for user in pending_users %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+                                            {{ user.first_name|first }}{{ user.last_name|first }}
+                                        </div>
+                                        <div class="ml-4">
+                                            <p class="text-sm font-medium text-gray-900">{{ user.get_full_name }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ user.email }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">{{ user.username }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {% if user.phone_number %}
+                                        {{ user.phone_number }}
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if user.id_document %}
+                                        <a href="{{ user.id_document.url }}" target="_blank" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 hover:bg-green-200 transition">
+                                            <i class="fas fa-file-download mr-1"></i>
+                                            View
+                                        </a>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times-circle mr-1"></i>
+                                            Missing
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    <span class="text-xs text-gray-500">{{ user.created_at|date:"M d, Y H:i" }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center space-x-2">
+                                        <!-- Approve Button -->
+                                        <form method="POST" action="{% url 'approve_registration' user.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-green-600 text-white hover:bg-green-700 transition" onclick="return confirm('Approve registration for {{ user.get_full_name }}?')">
+                                                <i class="fas fa-check mr-1"></i>
+                                                Approve
+                                            </button>
+                                        </form>
+                                        
+                                        <!-- Reject Button -->
+                                        <form method="POST" action="{% url 'reject_registration' user.id %}" style="display: inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition" onclick="return confirm('Reject registration for {{ user.get_full_name }}? This will delete the account.')">
+                                                <i class="fas fa-times mr-1"></i>
+                                                Reject
+                                            </button>
+                                        </form>
+
+                                        <!-- View Details Button -->
+                                        <a href="#" onclick="showDetails(event, {{ user.id }})" class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition">
+                                            <i class="fas fa-eye mr-1"></i>
+                                            Details
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Details Modal Row -->
+                            <tr id="details-{{ user.id }}" class="hidden bg-blue-50">
+                                <td colspan="7" class="px-6 py-4">
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900 mb-3">Personal Information</h4>
+                                            <dl class="space-y-2 text-sm">
+                                                <div>
+                                                    <dt class="font-medium text-gray-700">Full Name</dt>
+                                                    <dd class="text-gray-600">{{ user.get_full_name }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="font-medium text-gray-700">Email</dt>
+                                                    <dd class="text-gray-600">{{ user.email }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="font-medium text-gray-700">Username</dt>
+                                                    <dd class="text-gray-600">{{ user.username }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="font-medium text-gray-700">Phone</dt>
+                                                    <dd class="text-gray-600">{{ user.phone_number|default:'-' }}</dd>
+                                                </div>
+                                                <div>
+                                                    <dt class="font-medium text-gray-700">Registration Date</dt>
+                                                    <dd class="text-gray-600">{{ user.created_at|date:"M d, Y H:i" }}</dd>
+                                                </div>
+                                            </dl>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-semibold text-gray-900 mb-3">Customer Information</h4>
+                                            <dl class="space-y-2 text-sm">
+                                                {% if user.customer_profile %}
+                                                    <div>
+                                                        <dt class="font-medium text-gray-700">Address</dt>
+                                                        <dd class="text-gray-600">{{ user.customer_profile.address|default:'Not provided' }}</dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="font-medium text-gray-700">Senior Citizen</dt>
+                                                        <dd class="text-gray-600">
+                                                            {% if user.customer_profile.is_senior %}
+                                                                <span class="inline-flex items-center px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-medium">Yes (20% discount)</span>
+                                                            {% else %}
+                                                                <span class="text-gray-500">No</span>
+                                                            {% endif %}
+                                                        </dd>
+                                                    </div>
+                                                    <div>
+                                                        <dt class="font-medium text-gray-700">PWD (Person with Disability)</dt>
+                                                        <dd class="text-gray-600">
+                                                            {% if user.customer_profile.is_pwd %}
+                                                                <span class="inline-flex items-center px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs font-medium">Yes (20% discount)</span>
+                                                            {% else %}
+                                                                <span class="text-gray-500">No</span>
+                                                            {% endif %}
+                                                        </dd>
+                                                    </div>
+                                                {% else %}
+                                                    <p class="text-gray-500">No customer profile found</p>
+                                                {% endif %}
+                                            </dl>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% else %}
+        <!-- Empty State -->
+        <div class="bg-white rounded-lg shadow-sm p-12 text-center">
+            <i class="fas fa-check-circle text-6xl text-green-400 mb-4"></i>
+            <h3 class="text-2xl font-semibold text-gray-900 mb-2">All Clear!</h3>
+            <p class="text-gray-600 mb-6">No pending customer registrations at this time.</p>
+            <a href="{% url 'dashboard' %}" class="inline-flex items-center px-6 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    function showDetails(event, userId) {
+        event.preventDefault();
+        const detailsRow = document.getElementById('details-' + userId);
+        detailsRow.classList.toggle('hidden');
+    }
+</script>
+{% endblock %}

@@ -32,7 +32,7 @@
                 </div>
             {% endif %}
 
-            <form method="POST" class="space-y-4" id="registrationForm">
+            <form method="POST" class="space-y-4" id="registrationForm" enctype="multipart/form-data">
                 {% csrf_token %}
 
                 <!-- User Type Selection -->
@@ -210,6 +210,23 @@
                     </label>
                 </div>
 
+                <!-- ID Document Upload (Customer Only) -->
+                <div id="idDocumentField" class="hidden">
+                    <label for="id_document" class="block text-sm font-medium text-slate-300 mb-2">
+                        Government ID / Identification Document
+                    </label>
+                    <div class="relative">
+                        <input
+                            type="file"
+                            id="id_document"
+                            name="id_document"
+                            accept=".pdf,.jpg,.jpeg,.png,.gif"
+                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700"
+                        >
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Accepted formats: PDF, JPG, JPEG, PNG (Max 5MB). Required for customer approval.</p>
+                </div>
+
                 <!-- Password Row -->
                 <div class="grid grid-cols-2 gap-4">
                     <!-- Password -->
@@ -290,16 +307,20 @@
                 roleField.classList.remove('hidden');
                 addressField.classList.add('hidden');
                 customerStatusFields.classList.add('hidden');
+                document.getElementById('idDocumentField').classList.add('hidden');
                 roleSelect.setAttribute('required', 'required');
                 roleSelect.style.display = 'block';
                 document.getElementById('address').removeAttribute('required');
+                document.getElementById('id_document').removeAttribute('required');
             } else if (userType === 'customer') {
                 roleField.classList.add('hidden');
                 addressField.classList.remove('hidden');
                 customerStatusFields.classList.remove('hidden');
+                document.getElementById('idDocumentField').classList.remove('hidden');
                 roleSelect.removeAttribute('required');
                 roleSelect.style.display = 'none';
                 roleSelect.value = '';  // Clear role selection for customers
+                document.getElementById('id_document').setAttribute('required', 'required');
             }
         }
 

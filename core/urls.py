@@ -10,7 +10,7 @@ from .frontend_views import (
     pos, sales_orders,
     delivery_queue, deliveries, all_pickups,
     suppliers, purchase_orders,
-    inventory_reports, sales_reports, delivery_reports
+    inventory_reports, sales_reports
 )
 from app_sales.sales_pdf_views import sales_orders_export_preview, export_sales_orders_pdf
 from app_dashboard.views import (
@@ -54,7 +54,6 @@ urlpatterns = [
     # Report Routes
     path('reports/inventory/', inventory_reports, name='inventory-reports'),
     path('reports/sales/', sales_reports, name='sales-reports'),
-    path('reports/delivery/', delivery_reports, name='delivery-reports'),
     
     # Dashboard Partials Routes
     path('dashboard/low_stock_alerts/', low_stock_alerts_view, name='dashboard-low-stock-alerts'),

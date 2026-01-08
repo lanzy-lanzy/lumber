@@ -115,7 +115,9 @@ class POSViewSet(viewsets.ViewSet):
             
             # Ensure amount_paid does not exceed balance for the purpose of the SO record
             # but we allow amount_tendered to be higher for change calculation.
-            amount_to_pay = min(Decimal(str(so.total_amount - so.discount_amount)), Decimal(str(amount_tendered)))
+            order_total = (so.total_amount - so.discount_amount).quantize(Decimal('0.01'))
+            amount_tendered_decimal = Decimal(str(amount_tendered)).quantize(Decimal('0.01'))
+            amount_to_pay = min(order_total, amount_tendered_decimal)
             
             # Process payment
             so, receipt = SalesService.process_payment(

@@ -28,6 +28,12 @@ def login_view(request):
         if user is not None:
             # Refresh user from DB before login to ensure clean state
             user.refresh_from_db()
+            
+            # Check if customer is approved
+            if user.is_customer() and not user.is_approved:
+                messages.error(request, 'Your account is pending admin approval. Please check your email for approval status.')
+                return render(request, 'authentication/login.html', {'username': username})
+            
             import sys
             print(f"DEBUG: Login successful for {user.username}, is_customer={user.is_customer()}", file=sys.stderr)
             login(request, user)
@@ -75,6 +81,7 @@ def register_view(request):
         address = request.POST.get('address', '').strip() if user_type == 'customer' else ''
         is_senior = request.POST.get('is_senior') == 'true' if user_type == 'customer' else False
         is_pwd = request.POST.get('is_pwd') == 'true' if user_type == 'customer' else False
+        id_document = request.FILES.get('id_document') if user_type == 'customer' else None
         
         # Validation
         errors = []
@@ -105,6 +112,13 @@ def register_view(request):
             elif role not in [choice[0] for choice in ROLE_CHOICES]:
                 errors.append('Invalid role selected.')
         
+        # ID document validation for customers
+        if user_type == 'customer':
+            if not id_document:
+                errors.append('ID document is required for customer registration.')
+            elif id_document.size > 5242880:  # 5MB limit
+                errors.append('ID document must be less than 5MB.')
+        
         # Check if user already exists
         if CustomUser.objects.filter(username=username).exists():
             errors.append('Username already exists.')
@@ -126,6 +140,7 @@ def register_view(request):
                     'address': address,
                     'is_senior': 'true' if is_senior else '',
                     'is_pwd': 'true' if is_pwd else '',
+                    'id_document': id_document.name if id_document else '',
                 },
                 'role_choices': ROLE_CHOICES,
             }
@@ -133,6 +148,7 @@ def register_view(request):
         
         # Create user
         try:
+            # For customers, set is_approved to False (requires admin approval)
             user = CustomUser.objects.create_user(
                 username=username,
                 email=email,
@@ -142,6 +158,8 @@ def register_view(request):
                 phone_number=phone_number,
                 user_type=user_type,
                 role=role if user_type == 'employee' else None,
+                is_approved=True if user_type == 'employee' else False,
+                id_document=id_document if user_type == 'customer' else None,
             )
             
             # Create customer profile if user is a customer
@@ -152,11 +170,8 @@ def register_view(request):
                     is_senior=is_senior,
                     is_pwd=is_pwd,
                 )
-                # Auto-login customer after registration
-                login(request, user)
-                messages.success(request, f'Welcome {user.get_full_name()}! Your account has been created successfully.')
-                # Redirect to customer dashboard immediately
-                return redirect('customer-dashboard')
+                messages.success(request, 'Account created successfully! Your ID has been submitted for admin approval. You will be able to login once approved.')
+                return redirect('login')
             
             messages.success(request, 'Account created successfully! Please log in.')
             return redirect('login')
@@ -195,3 +210,66 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been logged out successfully.')
     return redirect('login')
+
+
+@login_required
+@require_http_methods(["GET"])
+def pending_registrations_view(request):
+    """View pending customer registrations for admin approval"""
+    # Only admins can access this view
+    if not request.user.is_admin():
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('dashboard')
+    
+    # Get all unapproved customer registrations
+    pending_users = CustomUser.objects.filter(
+        user_type='customer',
+        is_approved=False
+    ).select_related('customer_profile').order_by('-created_at')
+    
+    context = {
+        'page_title': 'Pending Registrations',
+        'pending_users': pending_users,
+        'pending_count': pending_users.count(),
+    }
+    return render(request, 'authentication/pending_registrations.html', context)
+
+
+@login_required
+@require_http_methods(["POST"])
+def approve_registration_view(request, user_id):
+    """Approve a pending customer registration"""
+    # Only admins can access this view
+    if not request.user.is_admin():
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('dashboard')
+    
+    try:
+        user = CustomUser.objects.get(id=user_id, user_type='customer', is_approved=False)
+        user.is_approved = True
+        user.save()
+        messages.success(request, f'{user.get_full_name()} has been approved and can now login.')
+    except CustomUser.DoesNotExist:
+        messages.error(request, 'User not found or already approved.')
+    
+    return redirect('pending_registrations')
+
+
+@login_required
+@require_http_methods(["POST"])
+def reject_registration_view(request, user_id):
+    """Reject a pending customer registration"""
+    # Only admins can access this view
+    if not request.user.is_admin():
+        messages.error(request, 'Access denied. Admin privileges required.')
+        return redirect('dashboard')
+    
+    try:
+        user = CustomUser.objects.get(id=user_id, user_type='customer', is_approved=False)
+        email = user.email
+        user.delete()
+        messages.success(request, f'Registration for {email} has been rejected and deleted.')
+    except CustomUser.DoesNotExist:
+        messages.error(request, 'User not found or already approved.')
+    
+    return redirect('pending_registrations')

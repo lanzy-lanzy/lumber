@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Service Orders{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Service Orders</h1>
+            <p class="text-gray-600 mt-2">Manage all lumbering service operations</p>
+        </div>
+        <a href="{% url 'lumbering_service:order_create' %}" class="inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition duration-200 shadow-md">
+            <i class="fas fa-plus mr-2"></i>
+            <span>New Service Order</span>
+        </a>
+    </div>
+    
+    <!-- Filter Card -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
+        <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none bg-white cursor-pointer">
+                    <option value="">All Statuses</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition duration-200 font-medium">
+                    <i class="fas fa-filter mr-2"></i>Apply Filter
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Orders Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="border-b border-gray-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-gray-900 flex items-center">
+                <i class="fas fa-list-ul mr-3 text-amber-600"></i>
+                All Service Orders
+            </h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Order #</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Customer</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Wood Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Logs</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Output (BF)</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Service Fee</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for order in orders %}
+                    <tr class="hover:bg-gray-50 transition duration-150">
+                        <td class="px-6 py-4 whitespace-nowrap"><span class="font-bold text-gray-900">#{{ order.id }}</span></td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ order.customer.name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ order.wood_type }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700">{{ order.quantity_logs }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-semibold text-amber-600">{{ order.actual_output_bf }} BF</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if order.status == 'pending' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-800">
+                                    <i class="fas fa-hourglass-half mr-1"></i> Pending
+                                </span>
+                            {% elif order.status == 'in_progress' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                    <i class="fas fa-spinner mr-1"></i> In Progress
+                                </span>
+                            {% elif order.status == 'completed' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                    <i class="fas fa-check-circle mr-1"></i> Completed
+                                </span>
+                            {% elif order.status == 'cancelled' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                    <i class="fas fa-times-circle mr-1"></i> Cancelled
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-semibold">₱{{ order.total_service_fee|default:"—"|floatformat:2 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ order.received_date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'lumbering_service:order_detail' order.id %}" class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition duration-200 text-sm font-medium">
+                                <i class="fas fa-eye mr-1"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="px-6 py-8 text-center">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-search text-gray-400 text-3xl mb-2"></i>
+                                <p class="text-gray-500">No service orders found matching your filters</p>
+                                <a href="{% url 'lumbering_service:order_create' %}" class="mt-3 text-amber-600 hover:text-amber-700 font-medium">
+                                    <i class="fas fa-plus mr-1"></i> Create New Order
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

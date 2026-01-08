@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
@@ -40,6 +41,7 @@ class LumberProductViewSet(viewsets.ModelViewSet):
     serializer_class = LumberProductSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]  # Public read, authenticated write
     pagination_class = ProductPagination
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get_queryset(self):
         """Cache the queryset for better performance"""
@@ -47,9 +49,10 @@ class LumberProductViewSet(viewsets.ModelViewSet):
     
     def list(self, request, *args, **kwargs):
         """Override list to add caching"""
-        # Generate cache key based on request parameters
-        cache_key = f"products_list_{request.query_params.urlencode()}"
-        
+        # Generate cache key based on request parameters and global version
+        version = self._get_products_list_version()
+        cache_key = f"products_list_v{version}_{request.query_params.urlencode()}"
+
         # Try to get from cache
         cached_data = cache.get(cache_key)
         if cached_data is not None:
@@ -77,23 +80,67 @@ class LumberProductViewSet(viewsets.ModelViewSet):
         return response
     
     def create(self, request, *args, **kwargs):
-        """Create and clear list cache"""
-        response = super().create(request, *args, **kwargs)
-        self._clear_product_cache()
-        return response
+        """Create and clear list cache. Wrap with debug logging to capture file upload issues."""
+        try:
+            response = super().create(request, *args, **kwargs)
+            self._clear_product_cache()
+            try:
+                self._bump_products_list_version()
+            except Exception:
+                pass
+            return response
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            # Log request summary to help debug file upload issues
+            try:
+                files = list(request.FILES.keys())
+            except Exception:
+                files = str(type(request.FILES))
+            try:
+                data_keys = list(request.data.keys()) if hasattr(request.data, 'keys') else str(type(request.data))
+            except Exception:
+                data_keys = str(type(request.data))
+            print(f"[ProductCreateDebug] FILES: {files}")
+            print(f"[ProductCreateDebug] DATA_KEYS: {data_keys}")
+            return Response({'error': 'Error creating product', 'details': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     def update(self, request, *args, **kwargs):
         """Update and clear caches"""
-        response = super().update(request, *args, **kwargs)
-        self._clear_product_cache()
-        cache.delete(f"product_{kwargs.get('pk')}")
-        return response
+        try:
+            response = super().update(request, *args, **kwargs)
+            self._clear_product_cache()
+            try:
+                self._bump_products_list_version()
+            except Exception:
+                pass
+            cache.delete(f"product_{kwargs.get('pk')}")
+            return response
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            try:
+                files = list(request.FILES.keys())
+            except Exception:
+                files = str(type(request.FILES))
+            try:
+                data_keys = list(request.data.keys()) if hasattr(request.data, 'keys') else str(type(request.data))
+            except Exception:
+                data_keys = str(type(request.data))
+            print(f"[ProductUpdateDebug] FILES: {files}")
+            print(f"[ProductUpdateDebug] DATA_KEYS: {data_keys}")
+            return Response({'error': 'Error updating product', 'details': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     def destroy(self, request, *args, **kwargs):
         """Delete and clear caches"""
         self._clear_product_cache()
         cache.delete(f"product_{kwargs.get('pk')}")
-        return super().destroy(request, *args, **kwargs)
+        resp = super().destroy(request, *args, **kwargs)
+        try:
+            self._bump_products_list_version()
+        except Exception:
+            pass
+        return resp
     
     def _clear_product_cache(self):
         """Clear all product-related caches"""
@@ -106,6 +153,35 @@ class LumberProductViewSet(viewsets.ModelViewSet):
         for key in keys:
             if key.startswith('products_list_') or key.startswith('product_'):
                 cache.delete(key)
+
+    def _get_products_list_version(self):
+        """Return current products list cache version (int); initialize if missing."""
+        try:
+            v = cache.get('products_list_version')
+            if v is None:
+                cache.set('products_list_version', 1)
+                return 1
+            return int(v)
+        except Exception:
+            # Fallback to 1 if cache backend incompatible
+            return 1
+
+    def _bump_products_list_version(self):
+        """Increment products list cache version so existing cached lists become stale."""
+        try:
+            v = cache.get('products_list_version')
+            if v is None:
+                cache.set('products_list_version', 2)
+            else:
+                try:
+                    cache.set('products_list_version', int(v) + 1)
+                except Exception:
+                    cache.set('products_list_version', 2)
+        except Exception:
+            try:
+                cache.incr('products_list_version')
+            except Exception:
+                cache.set('products_list_version', 2)
     
     @action(detail=False, methods=['get'])
     def by_category(self, request):
@@ -219,6 +295,10 @@ class LumberProductViewSet(viewsets.ModelViewSet):
             
             # Clear product caches after all deletion attempts
             self._clear_product_cache()
+            try:
+                self._bump_products_list_version()
+            except Exception:
+                pass
             
             # Build response
             response_data = {

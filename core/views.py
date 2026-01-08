@@ -2,12 +2,31 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.cache import never_cache
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseForbidden
+from functools import wraps
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from core.models import CustomUser
 from core.serializers import UserSerializer, UserCreateSerializer
+
+
+def role_required(*allowed_roles):
+    """Decorator to check user role"""
+    def decorator(view_func):
+        @wraps(view_func)
+        def wrapper(request, *args, **kwargs):
+            if not request.user.is_authenticated:
+                return redirect('login')
+            
+            user_role = getattr(request.user, 'role', 'User')
+            if user_role not in allowed_roles:
+                return HttpResponseForbidden("Access Denied")
+            
+            return view_func(request, *args, **kwargs)
+        return wrapper
+    return decorator
 
 
 @require_http_methods(["GET"])
@@ -132,3 +151,167 @@ class UserViewSet(viewsets.ModelViewSet):
         users = CustomUser.objects.filter(role=role)
         serializer = self.get_serializer(users, many=True)
         return Response(serializer.data)
+
+
+# Frontend Views - Inventory
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def products(request):
+    """Product catalog management"""
+    context = {
+        'page_title': 'Products',
+        'breadcrumbs': ['Inventory', 'Products'],
+    }
+    return render(request, 'inventory/products.html', context)
+
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def inventory_dashboard(request):
+    """Inventory manager dashboard"""
+    context = {
+        'page_title': 'Inventory Dashboard',
+        'breadcrumbs': ['Dashboard', 'Inventory'],
+    }
+    return render(request, 'dashboards/inventory_manager_dashboard.html', context)
+
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def stock_in(request):
+    """Stock In - Add new inventory"""
+    context = {
+        'page_title': 'Stock In',
+        'breadcrumbs': ['Inventory', 'Stock In'],
+    }
+    return render(request, 'inventory/stock_in.html', context)
+
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def stock_out(request):
+    """Stock Out - Record inventory deductions"""
+    context = {
+        'page_title': 'Stock Out',
+        'breadcrumbs': ['Inventory', 'Stock Out'],
+    }
+    return render(request, 'inventory/stock_out.html', context)
+
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def stock_adjustment(request):
+    """Stock Adjustment - Inventory corrections"""
+    context = {
+        'page_title': 'Stock Adjustment',
+        'breadcrumbs': ['Inventory', 'Adjustments'],
+    }
+    return render(request, 'inventory/stock_adjustment.html', context)
+
+
+# Frontend Views - Sales
+
+@login_required
+@role_required('Admin', 'Cashier')
+def pos(request):
+    """Point of Sale interface"""
+    context = {
+        'page_title': 'Point of Sale',
+        'breadcrumbs': ['Sales', 'POS'],
+    }
+    return render(request, 'dashboards/cashier_dashboard.html', context)
+
+
+@login_required
+@role_required('Admin', 'Cashier')
+def sales_orders(request):
+    """Sales Orders management"""
+    context = {
+        'page_title': 'Sales Orders',
+        'breadcrumbs': ['Sales', 'Orders'],
+    }
+    return render(request, 'sales/sales_orders.html', context)
+
+
+# Frontend Views - Delivery
+
+@login_required
+@role_required('Admin', 'Warehouse Staff')
+def delivery_queue(request):
+    """Warehouse delivery queue"""
+    context = {
+        'page_title': 'Delivery Queue',
+        'breadcrumbs': ['Delivery', 'Queue'],
+    }
+    return render(request, 'dashboards/warehouse_dashboard.html', context)
+
+
+@login_required
+@role_required('Admin', 'Warehouse Staff')
+def deliveries(request):
+    """All deliveries list"""
+    context = {
+        'page_title': 'All Deliveries',
+        'breadcrumbs': ['Delivery', 'All'],
+    }
+    return render(request, 'delivery/deliveries.html', context)
+
+
+# Frontend Views - Supplier
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def suppliers(request):
+    """Supplier management"""
+    context = {
+        'page_title': 'Suppliers',
+        'breadcrumbs': ['Supplier', 'List'],
+    }
+    return render(request, 'supplier/suppliers.html', context)
+
+
+@login_required
+@role_required('Admin', 'Inventory Manager')
+def purchase_orders(request):
+    """Purchase Orders management"""
+    context = {
+        'page_title': 'Purchase Orders',
+        'breadcrumbs': ['Supplier', 'POs'],
+    }
+    return render(request, 'supplier/purchase_orders.html', context)
+
+
+# Frontend Views - Reports
+
+@login_required
+@role_required('Admin')
+def inventory_reports(request):
+    """Inventory reports"""
+    context = {
+        'page_title': 'Inventory Reports',
+        'breadcrumbs': ['Reports', 'Inventory'],
+    }
+    return render(request, 'reports/inventory_reports.html', context)
+
+
+@login_required
+@role_required('Admin')
+def sales_reports(request):
+    """Sales reports"""
+    context = {
+        'page_title': 'Sales Reports',
+        'breadcrumbs': ['Reports', 'Sales'],
+    }
+    return render(request, 'reports/sales_reports.html', context)
+
+
+@login_required
+@role_required('Admin')
+def delivery_reports(request):
+    """Delivery reports"""
+    context = {
+        'page_title': 'Delivery Reports',
+        'breadcrumbs': ['Reports', 'Delivery'],
+    }
+    return render(request, 'reports/delivery_reports.html', context)

@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Record Wood Shavings{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Record Wood Shavings (Palaras)</h1>
+        <p class="text-gray-600 mt-2">
+            <span class="font-semibold">Service Order #{{ order.id }}</span> - {{ order.customer.name }}
+        </p>
+    </div>
+    
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <form method="post" novalidate class="p-8">
+            {% csrf_token %}
+            
+            <!-- Shavings Ownership Alert -->
+            <div class="mb-8 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <div class="flex items-start">
+                    <i class="fas fa-info-circle text-amber-600 mr-3 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <p class="font-semibold text-amber-900">Shavings Ownership Configuration</p>
+                        <p class="text-amber-800 mt-1">
+                            {% if order.shavings_ownership == 'customer' %}
+                            <i class="fas fa-user-circle mr-2"></i><strong>Customer</strong> gets all shavings (100% / 0%)
+                            {% elif order.shavings_ownership == 'lumber_company' %}
+                            <i class="fas fa-building mr-2"></i><strong>Lumber Company</strong> gets all shavings (0% / 100%)
+                            {% else %}
+                            <i class="fas fa-handshake mr-2"></i><strong>Split equally</strong> between customer and company (50% / 50%)
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shavings Quantity Section -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-leaf text-green-600 mr-3"></i>
+                    Shavings Quantity
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Quantity
+                        </label>
+                        <input type="number" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent" id="quantity" name="quantity" step="0.01" min="0" placeholder="Enter amount" required>
+                    </div>
+                    
+                    <div>
+                        <label for="unit" class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-star text-red-500"></i> Unit of Measurement
+                        </label>
+                        <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent" id="unit" name="unit" required>
+                            <option value="">-- Select unit --</option>
+                            <option value="kg">Kilograms (kg)</option>
+                            <option value="tons">Metric Tons</option>
+                            <option value="cubic_meters">Cubic Meters (m³)</option>
+                            <option value="bags">Bags</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 my-8"></div>
+            
+            <!-- Notes Section -->
+            <div class="mb-8">
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Additional Notes (Optional)</label>
+                <textarea class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent" id="notes" name="notes" rows="3" placeholder="Any notes about the shavings collection, storage, or handling..."></textarea>
+            </div>
+
+            <div class="border-t border-gray-200 my-8"></div>
+            
+            <!-- Ownership Summary -->
+            <div class="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+                <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+                    <i class="fas fa-chart-pie text-blue-600 mr-2"></i>
+                    Ownership Summary
+                </h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-blue-700 mb-1">Customer Share</p>
+                        <p class="text-2xl font-bold text-blue-600">
+                            {% if order.shavings_ownership == 'customer' %}
+                            100%
+                            {% elif order.shavings_ownership == 'lumber_company' %}
+                            0%
+                            {% else %}
+                            50%
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-blue-700 mb-1">Company Share</p>
+                        <p class="text-2xl font-bold text-blue-600">
+                            {% if order.shavings_ownership == 'customer' %}
+                            0%
+                            {% elif order.shavings_ownership == 'lumber_company' %}
+                            100%
+                            {% else %}
+                            50%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="border-t border-gray-200 pt-8 flex gap-3">
+                <button type="submit" class="inline-flex items-center px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition duration-200 font-medium shadow-md">
+                    <i class="fas fa-save mr-2"></i>
+                    <span>Record Shavings</span>
+                </button>
+                <a href="{% url 'lumbering_service:order_detail' order.id %}" class="inline-flex items-center px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-medium">
+                    <i class="fas fa-times mr-2"></i>
+                    <span>Cancel</span>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

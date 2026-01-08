@@ -191,14 +191,63 @@
                             <i class="fas fa-building w-5 mr-3 text-pink-400"></i>
                             <span>Suppliers</span>
                         </a>
-                        <a href="{% url 'purchase-orders' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
-                            <i class="fas fa-file-invoice w-5 mr-3 text-lime-400"></i>
-                            <span>Purchase Orders</span>
+                    </div>
+                    
+                    <!-- Round Wood Purchasing Section -->
+                    <div class="pt-6 mt-6 border-t border-gray-700">
+                        <div class="px-4 py-2 text-xs font-bold text-green-400 uppercase tracking-wide">Round Wood</div>
+                        <a href="{% url 'round_wood:dashboard' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-chart-line w-5 mr-3 text-green-400"></i>
+                            <span>Dashboard</span>
                         </a>
+                        <a href="{% url 'round_wood:purchase_list' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-tree w-5 mr-3 text-green-400"></i>
+                            <span>Purchases</span>
+                        </a>
+                        <a href="{% url 'round_wood:inventory_list' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-warehouse w-5 mr-3 text-green-300"></i>
+                            <span>Inventory</span>
+                        </a>
+                        <a href="{% url 'round_wood:wood_types_list' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-leaf w-5 mr-3 text-emerald-400"></i>
+                            <span>Wood Types</span>
+                        </a>
+                    </div>
+
+                    <!-- Lumbering Service Section -->
+                    <div class="pt-6 mt-6 border-t border-gray-700">
+                        <div class="px-4 py-2 text-xs font-bold text-amber-400 uppercase tracking-wide">Lumbering Service</div>
+                        <a href="{% url 'lumbering_service:dashboard' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-chart-line w-5 mr-3 text-amber-400"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="{% url 'lumbering_service:order_list' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-clipboard-list w-5 mr-3 text-orange-400"></i>
+                            <span>Service Orders</span>
+                        </a>
+                        <a href="{% url 'lumbering_service:order_create' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
+                            <i class="fas fa-plus-circle w-5 mr-3 text-yellow-400"></i>
+                            <span>New Order</span>
+                        </a>
+
                     </div>
                 {% endif %}
                 
                 {% if user.role == "admin" %}
+                    <!-- User Management Section -->
+                    <div class="pt-6 mt-6 border-t border-gray-700">
+                        <div class="px-4 py-2 text-xs font-bold text-purple-400 uppercase tracking-wide">User Management</div>
+                        <a href="{% url 'pending_registrations' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white justify-between">
+                            <div class="flex items-center">
+                                <i class="fas fa-user-check w-5 mr-3 text-purple-400"></i>
+                                <span>Pending Registrations</span>
+                            </div>
+                            {% if pending_count|default:0 > 0 %}
+                                <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">{{ pending_count }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+
                     <!-- Reports Section -->
                     <div class="pt-6 mt-6 border-t border-gray-700">
                         <div class="px-4 py-2 text-xs font-bold text-blue-400 uppercase tracking-wide">Reports</div>
@@ -207,23 +256,11 @@
                             <span>Inventory Reports</span>
                         </a>
                         <a href="{% url 'sales-reports' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
-                            <i class="fas fa-chart-pie w-5 mr-3 text-emerald-400"></i>
-                            <span>Sales Reports</span>
-                        </a>
-                        <a href="{% url 'delivery-reports' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
-                            <i class="fas fa-route w-5 mr-3 text-violet-400"></i>
-                            <span>Delivery Reports</span>
-                        </a>
+                             <i class="fas fa-chart-pie w-5 mr-3 text-emerald-400"></i>
+                             <span>Sales Reports</span>
+                         </a>
                     </div>
-                    
-                    <!-- Admin Section -->
-                    <div class="pt-6 mt-6 border-t border-gray-700 pb-6">
-                        <div class="px-4 py-2 text-xs font-bold text-blue-400 uppercase tracking-wide">Administration</div>
-                        <a href="{% url 'admin:index' %}" class="sidebar-nav flex items-center px-4 py-3 rounded-lg hover:bg-gray-700 text-gray-300 hover:text-white">
-                            <i class="fas fa-cog w-5 mr-3 text-gray-400"></i>
-                            <span>Admin Panel</span>
-                        </a>
-                    </div>
+
                 {% endif %}
             </nav>
         </aside>

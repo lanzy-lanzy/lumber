@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-!k3h_!hhlf6r@x8$!6$&)**jz@i05!kapb9upr*7e^(&pnttv4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*','localhost']
 
 
 # Application definition
@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     "app_sales",
     "app_delivery",
     "app_supplier",
+    "app_round_wood",
+    "app_lumbering_service",
     "app_dashboard",
     "app_authentication",
 ]
@@ -70,6 +72,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "app_sales.context_processors.order_notifications",
+                "core.context_processors.pending_registrations_count",
             ],
         },
     },

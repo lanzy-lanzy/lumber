@@ -178,14 +178,3 @@ def sales_reports(request):
         'breadcrumbs': ['Reports', 'Sales'],
     }
     return render(request, 'reports/sales_reports.html', context)
-
-
-@login_required
-@role_required('admin')
-def delivery_reports(request):
-    """Delivery reports"""
-    context = {
-        'page_title': 'Delivery Reports',
-        'breadcrumbs': ['Reports', 'Delivery'],
-    }
-    return render(request, 'reports/delivery_reports.html', context)

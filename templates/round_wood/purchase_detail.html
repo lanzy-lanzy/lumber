@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Round Wood Purchase - {{ purchase.id }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Purchase Record</h1>
+            <p class="text-gray-500 mt-1">Details of round wood purchase</p>
+        </div>
+        <span class="px-4 py-2 rounded-lg font-medium text-white
+            {% if purchase.status == 'completed' %}bg-green-600{% elif purchase.status == 'pending' %}bg-yellow-600{% else %}bg-red-600{% endif %}">
+            {{ purchase.get_status_display }}
+        </span>
+    </div>
+
+    <!-- Main Content Card -->
+    <div class="bg-white rounded-lg shadow p-6 space-y-6">
+        <!-- Supplier Information -->
+        <div class="border-b pb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-building text-blue-500 mr-2"></i>Supplier
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Supplier Name</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ purchase.supplier.company_name }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Contact</p>
+                    <p class="text-gray-900">{{ purchase.supplier.contact_person|default:"N/A" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wood Details -->
+        <div class="border-b pb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-tree text-green-500 mr-2"></i>Wood Details
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Wood Type</p>
+                    <p class="text-gray-900">{{ purchase.wood_type.name }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Species</p>
+                    <p class="text-gray-900">{{ purchase.wood_type.get_species_display }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Number of Logs</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ purchase.quantity_logs }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Diameter / Length</p>
+                    <p class="text-gray-900">{{ purchase.diameter_inches|floatformat:1 }}" / {{ purchase.length_feet|floatformat:1 }}' ft</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Volume & Cost Information -->
+        <div class="border-b pb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-calculator text-orange-500 mr-2"></i>Volume & Cost
+            </h2>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Volume</p>
+                    <p class="text-2xl font-bold text-blue-900">{{ purchase.volume_cubic_feet|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-600 mt-1">cubic feet</p>
+                </div>
+                <div class="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Unit Cost</p>
+                    <p class="text-2xl font-bold text-orange-900">₱{{ purchase.unit_cost_per_cubic_foot|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-600 mt-1">per cubic foot</p>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total Cost</p>
+                    <p class="text-2xl font-bold text-green-900">₱{{ purchase.total_cost|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-600 mt-1">calculated</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Purchase Information -->
+        <div class="border-b pb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-calendar text-purple-500 mr-2"></i>Purchase Information
+            </h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Purchase Date</p>
+                    <p class="text-gray-900">{{ purchase.purchase_date|date:"B d, Y" }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Status</p>
+                    <p class="text-gray-900">
+                        {% if purchase.status == 'completed' %}
+                            <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Completed</span>
+                        {% elif purchase.status == 'pending' %}
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Pending</span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Cancelled</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-span-2">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide">Created</p>
+                    <p class="text-gray-900">{{ purchase.created_at|date:"b d, Y \a\t H:i" }} by {{ purchase.created_by.get_full_name|default:purchase.created_by.username }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        {% if purchase.notes %}
+        <div>
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-sticky-note text-yellow-500 mr-2"></i>Notes
+            </h2>
+            <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-gray-900">
+                {{ purchase.notes|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions Card -->
+    {% if purchase.status != 'cancelled' %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-cogs text-gray-500 mr-2"></i>Actions
+        </h2>
+        
+        <div class="space-y-3">
+            {% if purchase.status == 'pending' %}
+            <form method="post" action="{% url 'round_wood:purchase_action' purchase.id 'complete' %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium text-left">
+                    <i class="fas fa-check-circle mr-2"></i>Mark as Completed
+                    <span class="text-sm font-normal">(Adds to inventory)</span>
+                </button>
+            </form>
+            {% endif %}
+
+            {% if purchase.status != 'completed' %}
+            <form method="post" action="{% url 'round_wood:purchase_action' purchase.id 'cancel' %}" class="inline"
+                  onsubmit="return confirm('Are you sure you want to cancel this purchase?');">
+                {% csrf_token %}
+                <button type="submit" class="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium text-left">
+                    <i class="fas fa-times-circle mr-2"></i>Cancel Purchase
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Back Button -->
+    <div>
+        <a href="{% url 'round_wood:purchase_list' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Purchases
+        </a>
+    </div>
+</div>
+
+{% endblock %}

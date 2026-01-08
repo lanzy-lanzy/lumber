@@ -222,12 +222,13 @@ class ShoppingCartViewSet(viewsets.ViewSet):
         
         try:
             with transaction.atomic():
-                # Create sales order
+                # Create sales order - customer_order is automatically set for cart checkouts
                 so = SalesService.create_sales_order(
                     customer_id=customer.id,
                     items=items,
                     payment_type=payment_type,
-                    created_by=request.user
+                    created_by=request.user,
+                    order_source='customer_order'
                 )
                 
                 # Clear cart after successful order

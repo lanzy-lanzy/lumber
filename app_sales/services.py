@@ -19,7 +19,7 @@ class SalesService:
     
     @staticmethod
     @transaction.atomic
-    def create_sales_order(customer_id, items, payment_type='cash', created_by=None):
+    def create_sales_order(customer_id, items, payment_type='cash', created_by=None, order_source='point_of_sale'):
         """
         Create a sales order with line items
         
@@ -28,6 +28,7 @@ class SalesService:
             items: List of dicts with 'product_id' and 'quantity_pieces'
             payment_type: 'cash', 'partial', or 'credit'
             created_by: User creating the order
+            order_source: 'customer_order' or 'point_of_sale' (default)
             
         Returns:
             SalesOrder: Created sales order
@@ -44,7 +45,8 @@ class SalesService:
         so = SalesOrder.objects.create(
             customer=customer,
             payment_type=payment_type,
-            created_by=created_by
+            created_by=created_by,
+            order_source=order_source
         )
         
         # Generate unique SO number
@@ -154,7 +156,8 @@ class SalesService:
         so.amount_paid = Decimal(str(amount_paid))
         so.balance = so.total_amount - so.discount_amount - so.amount_paid
         
-        if so.balance < 0:
+        # Allow for small floating-point rounding errors (up to 0.01)
+        if so.balance < Decimal('-0.01'):
             raise ValidationError("Amount paid exceeds balance")
         
         so.save()

@@ -126,7 +126,7 @@
                                     <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold" :class="getCategoryColor(product.category)" x-text="getCategoryLabel(product.category)"></span>
                                 </td>
                                 <td class="px-6 py-4 text-center text-sm text-gray-600">
-                                    <span x-text="`${product.thickness}\" × ${product.width}\" × ${product.length}ft`"></span>
+                                    <span x-text='`${product.thickness}" × ${product.width}" × ${product.length}ft`'></span>
                                 </td>
                                 <td class="px-6 py-4 text-right text-sm font-semibold text-green-600" x-text="`₱${parseFloat(product.price_per_board_foot).toFixed(2)}`"></td>
                                 <td class="px-6 py-4 text-center">
@@ -425,7 +425,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <p class="text-sm text-gray-600">Thickness × Width × Length</p>
-                                <p class="font-semibold" x-text="`${selectedProduct.thickness}\" × ${selectedProduct.width}\" × ${selectedProduct.length}ft`"></p>
+                                <p class="font-semibold" x-text='`${selectedProduct.thickness}" × ${selectedProduct.width}" × ${selectedProduct.length}ft`'></p>
                             </div>
                             <div>
                                 <p class="text-sm text-gray-600">Board Feet</p>
@@ -681,7 +681,8 @@ function productsApp() {
             try {
                 this.calculateFormBoardFeet();
                 const url = this.editingProduct ? `/api/products/${this.formData.id}/` : '/api/products/';
-                const method = this.editingProduct ? 'PUT' : 'POST';
+                // Use PATCH for edits so multipart FormData parses correctly
+                const method = this.editingProduct ? 'PATCH' : 'POST';
 
                 // Always use FormData for proper file handling
                 const body = new FormData();
@@ -699,7 +700,7 @@ function productsApp() {
                 
                 // Only append image if a new file was selected
                 if (this.formData.image_file) {
-                    body.append('image', this.formData.image_file);
+                    body.append('image_file', this.formData.image_file);
                 }
 
                 const response = await fetch(url, {

@@ -123,15 +123,13 @@ class OrderConfirmation(models.Model):
                    f"Payment status: {'Completed' if self.is_payment_complete else 'Due on pickup'}"
         )
 
-        # Create Delivery record (Move to Delivery Queue)
-        from app_delivery.models import Delivery
-        Delivery.objects.get_or_create(
-            sales_order=self.sales_order,
-            defaults={
-                'delivery_number': f"DEL-{self.sales_order.so_number.split('-')[-1]}",
-                'status': 'pending'
-            }
-        )
+        # Create Delivery record (Move to Delivery Queue) using delivery service
+        try:
+            from app_delivery.services import DeliveryService
+            DeliveryService.create_delivery_for_order(self.sales_order, created_by=self.created_by)
+        except Exception:
+            # Fail silently for notifications to avoid blocking the confirmation flow
+            pass
     
     def mark_payment_complete(self):
         """Mark payment as complete"""

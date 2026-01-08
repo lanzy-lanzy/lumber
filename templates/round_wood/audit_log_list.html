@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Round Wood - Audit Log{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">Procurement Audit Log</h1>
+        <p class="text-gray-500 mt-1">Complete history of all round wood purchasing actions</p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+            <p class="text-gray-500 text-sm">Total Actions</p>
+            <p class="text-3xl font-bold text-gray-900">{{ total }}</p>
+            <p class="text-xs text-gray-500 mt-2">All recorded actions</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-600">
+            <p class="text-gray-500 text-sm">Actions This Week</p>
+            <p class="text-3xl font-bold text-gray-900">0</p>
+            <p class="text-xs text-gray-500 mt-2">Recent activity</p>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+            <p class="text-gray-500 text-sm">POs Tracked</p>
+            <p class="text-3xl font-bold text-gray-900">0</p>
+            <p class="text-xs text-gray-500 mt-2">Under management</p>
+        </div>
+    </div>
+
+    <!-- Audit Log Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Audit Trail</h3>
+        </div>
+        
+        {% if logs %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Timestamp</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">PO Number</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Action</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Performed By</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for log in logs %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    {{ log.created_at|date:"M d, Y H:i" }}
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium text-blue-600">
+                                    <a href="{% url 'round_wood:po_detail' log.purchase_order.id %}" class="hover:underline">
+                                        {{ log.purchase_order.po_number }}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 text-sm">
+                                    <span class="px-2 py-1 rounded text-xs font-medium 
+                                        {% if log.action == 'created' %}bg-gray-100 text-gray-800
+                                        {% elif log.action == 'submitted' %}bg-blue-100 text-blue-800
+                                        {% elif log.action == 'confirmed' %}bg-green-100 text-green-800
+                                        {% elif log.action == 'delivered' %}bg-yellow-100 text-yellow-800
+                                        {% elif log.action == 'inspected' %}bg-purple-100 text-purple-800
+                                        {% elif log.action == 'stocked' %}bg-emerald-100 text-emerald-800
+                                        {% elif log.action == 'cancelled' %}bg-red-100 text-red-800
+                                        {% elif log.action == 'item_inspected' %}bg-indigo-100 text-indigo-800
+                                        {% endif %}">
+                                        {{ log.get_action_display|upper }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    {{ log.performed_by.get_full_name|default:log.performed_by.username }}
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-600">
+                                    {% if log.notes %}
+                                        <span title="{{ log.notes }}" class="cursor-help">
+                                            {{ log.notes|truncatewords:10 }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-gray-400">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            
+                            <!-- Expandable Details Row -->
+                            {% if log.old_value or log.new_value %}
+                                <tr class="bg-gray-25 border-b border-gray-200">
+                                    <td colspan="5" class="px-6 py-3">
+                                        <div class="text-xs space-y-1">
+                                            {% if log.old_value %}
+                                                <div><span class="text-gray-600">Previous:</span> <code class="bg-red-50 text-red-700 px-2 py-1 rounded">{{ log.old_value }}</code></div>
+                                            {% endif %}
+                                            {% if log.new_value %}
+                                                <div><span class="text-gray-600">Updated:</span> <code class="bg-green-50 text-green-700 px-2 py-1 rounded">{{ log.new_value }}</code></div>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+                <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        Showing page {{ page }} of {{ total_pages }} ({{ total }} total actions)
+                    </div>
+                    <div class="space-x-2">
+                        {% if page > 1 %}
+                            <a href="?page=1" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">First</a>
+                            <a href="?page={{ page|add:'-1' }}" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">Previous</a>
+                        {% endif %}
+                        
+                        <span class="text-sm text-gray-600">
+                            Page <input type="number" min="1" max="{{ total_pages }}" value="{{ page }}" onchange="window.location.href='?page=' + this.value" class="w-12 border border-gray-300 rounded px-2 py-1" style="font-size: 0.875rem;"> of {{ total_pages }}
+                        </span>
+                        
+                        {% if page < total_pages %}
+                            <a href="?page={{ page|add:'1' }}" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">Next</a>
+                            <a href="?page={{ total_pages }}" class="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50">Last</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="px-6 py-12 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl opacity-50 mb-4 block"></i>
+                <p class="font-medium mb-1">No audit logs yet</p>
+                <p class="text-sm">Actions will appear here as purchase orders are created and managed</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Legend / Help -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 class="font-semibold text-blue-900 mb-2">Audit Log Reference</h4>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">CREATED</span>
+                <p class="text-xs text-gray-700 mt-1">PO was created</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">SUBMITTED</span>
+                <p class="text-xs text-gray-700 mt-1">Submitted for approval</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">CONFIRMED</span>
+                <p class="text-xs text-gray-700 mt-1">Approved & confirmed</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-yellow-100 text-yellow-800">DELIVERED</span>
+                <p class="text-xs text-gray-700 mt-1">Goods received</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">INSPECTED</span>
+                <p class="text-xs text-gray-700 mt-1">Quality checked</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-emerald-100 text-emerald-800">STOCKED</span>
+                <p class="text-xs text-gray-700 mt-1">In inventory</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">CANCELLED</span>
+                <p class="text-xs text-gray-700 mt-1">Order cancelled</p>
+            </div>
+            <div>
+                <span class="px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800">ITEM INSPECTED</span>
+                <p class="text-xs text-gray-700 mt-1">Item inspected</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Link -->
+    <div>
+        <a href="{% url 'round_wood:dashboard' %}" class="text-blue-600 hover:text-blue-700 font-medium">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+
+{% endblock %}
