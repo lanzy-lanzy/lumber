@@ -142,9 +142,10 @@ def lumbering_order_detail(request, pk):
 @login_required
 def lumbering_order_create(request):
     """Create a new lumbering service order"""
+    from app_round_wood.models import WoodType
+    from app_sales.models import Customer
+
     if request.method == 'POST':
-        from app_sales.models import Customer
-        
         customer_id = request.POST.get('customer')
         wood_type = request.POST.get('wood_type')
         quantity_logs = request.POST.get('quantity_logs')
@@ -157,6 +158,7 @@ def lumbering_order_create(request):
         if not customer_id or customer_id == '':
             return render(request, 'lumbering_service/order_create.html', {
                 'customers': Customer.objects.all(),
+                'wood_types': WoodType.objects.filter(is_active=True),
                 'error': 'Please select or create a customer before proceeding.'
             })
         
@@ -175,11 +177,12 @@ def lumbering_order_create(request):
         
         return redirect('lumbering_service:order_detail', pk=order.pk)
     
-    from app_sales.models import Customer
     customers = Customer.objects.all()
+    wood_types = WoodType.objects.filter(is_active=True)
     
     return render(request, 'lumbering_service/order_create.html', {
         'customers': customers,
+        'wood_types': wood_types,
     })
 
 
@@ -290,3 +293,39 @@ def create_walkin_customer(request):
     
     except Exception as e:
         return JsonResponse({'message': f'Error creating customer: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_wood_type(request):
+    """Create a new wood type for lumbering service"""
+    from app_round_wood.models import WoodType
+    
+    try:
+        name = request.POST.get('name', '').strip()
+        species = request.POST.get('species', 'hardwood').strip()
+        description = request.POST.get('description', '').strip()
+        
+        # Validation
+        if not name:
+            return JsonResponse({'message': 'Wood type name is required'}, status=400)
+        
+        # Check if already exists
+        if WoodType.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'message': 'This wood type already exists'}, status=400)
+            
+        # Create wood type
+        wood_type = WoodType.objects.create(
+            name=name,
+            species=species,
+            description=description,
+            is_active=True
+        )
+        
+        return JsonResponse({
+            'id': wood_type.id,
+            'name': wood_type.name,
+        }, status=201)
+    
+    except Exception as e:
+        return JsonResponse({'message': f'Error creating wood type: {str(e)}'}, status=500)

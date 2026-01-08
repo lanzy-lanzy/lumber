@@ -21,4 +21,7 @@ urlpatterns = [
     
     # Walk-in customer creation
     path('api/create-walkin-customer/', views.create_walkin_customer, name='api_create_walkin_customer'),
+    
+    # Wood type creation
+    path('api/create-wood-type/', views.create_wood_type, name='api_create_wood_type'),
 ]
