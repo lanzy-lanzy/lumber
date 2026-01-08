@@ -4,27 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Lumber Management System</title>
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        secondary: '#f59e0b',
+                        dark: '#020617',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Force dark background and fix Tailwind conflicts */
+        html, body {
+            background-color: #020617 !important;
+            margin: 0;
+            padding: 0;
+            color: #f8fafc;
+        }
+
+        .glass {
+            background: rgba(30, 41, 59, 0.7) !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        .hero-bg {
+            background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.08), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.05), transparent 40%);
+            background-color: #020617 !important;
+            background-attachment: fixed;
+        }
+
+        .input-glass {
+            background: rgba(15, 23, 42, 0.8) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: white !important;
+            transition: all 0.2s ease;
+        }
+
+        .input-glass:focus {
+            border-color: #10b981 !important;
+            background: rgba(15, 23, 42, 1) !important;
+            outline: none !important;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+        }
+
+        .type-radio:checked + div {
+            border-color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.15) !important;
+        }
+        
+        .type-radio:checked + div i {
+            color: #10b981 !important;
+        }
+
+        /* Override potential light-mode defaults */
+        * {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen flex items-center justify-center py-12 px-4">
-    <div class="w-full max-w-lg">
-        <!-- Logo/Header -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-amber-600 rounded-lg mb-4">
-                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                </svg>
-            </div>
-            <h1 class="text-3xl font-bold text-white mb-2">Lumber Manager</h1>
-            <p class="text-slate-400">Create your account</p>
+<body class="font-sans min-h-screen relative hero-bg py-16 px-6">
+    
+    <!-- Abstract shapes for depth -->
+    <div class="fixed top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full -z-10 animate-pulse"></div>
+    <div class="fixed bottom-0 left-0 w-[500px] h-[500px] bg-secondary/5 blur-[120px] rounded-full -z-10 animate-pulse" style="animation-delay: 2s;"></div>
+
+    <div class="w-full max-w-2xl mx-auto relative z-10">
+        <!-- Back Link -->
+        <div class="mb-10 text-center md:text-left">
+            <a href="{% url 'login' %}" class="inline-flex items-center text-slate-500 hover:text-primary transition-colors group">
+                <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform"></i>
+                <span class="text-xs font-bold uppercase tracking-widest">Return to Authorization</span>
+            </a>
         </div>
 
-        <!-- Register Card -->
-        <div class="bg-slate-800 rounded-lg shadow-2xl p-8 border border-slate-700">
+        <!-- Branding -->
+        <div class="mb-10 text-center">
+            <div class="inline-flex items-center space-x-3 mb-6">
+                <div class="p-2.5 bg-primary/20 rounded-xl border border-primary/20">
+                    <i class="fas fa-tree text-primary text-2xl"></i>
+                </div>
+                <span class="text-3xl font-display font-extrabold tracking-tight text-white italic">Lumber<span class="text-primary not-italic">IMS</span></span>
+            </div>
+            <h1 class="text-4xl font-display font-bold text-white mb-3">System Registration</h1>
+            <p class="text-slate-400 font-medium">Join the Infrastructure Management Network</p>
+        </div>
+
+        <!-- Card -->
+        <div class="glass p-8 md:p-12 rounded-[3.5rem] shadow-2xl relative">
             {% if errors %}
-                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <h3 class="text-red-800 font-semibold mb-2">Please fix the following errors:</h3>
-                    <ul class="list-disc list-inside text-red-700 text-sm space-y-1">
+                <div class="mb-8 p-6 bg-red-500/10 border border-red-500/20 rounded-3xl">
+                    <h3 class="text-red-400 font-bold mb-3 flex items-center gap-2 text-sm uppercase tracking-wider">
+                        <i class="fas fa-triangle-exclamation"></i>
+                        Initialization Obstacles
+                    </h3>
+                    <ul class="list-disc list-inside text-red-300 text-xs space-y-2 opacity-80">
                         {% for error in errors %}
                             <li>{{ error }}</li>
                         {% endfor %}
@@ -32,319 +134,180 @@
                 </div>
             {% endif %}
 
-            <form method="POST" class="space-y-4" id="registrationForm" enctype="multipart/form-data">
+            <form method="POST" class="space-y-10" id="registrationForm" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <!-- User Type Selection -->
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-slate-300 mb-3">
-                        Register as
-                    </label>
-                    <div class="grid grid-cols-2 gap-3">
-                        <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
-                            <input
-                                type="radio"
-                                name="user_type"
-                                value="employee"
-                                {% if form_data.user_type == 'employee' or not form_data.user_type %}checked{% endif %}
-                                class="w-4 h-4 text-amber-600"
-                                onchange="toggleUserTypeFields()"
-                            >
-                            <span class="ml-3 text-white text-sm font-medium">Employee</span>
+                <!-- Identity Selection -->
+                <div class="space-y-5">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Identity Profile</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="user_type" value="employee" class="sr-only type-radio" {% if form_data.user_type == 'employee' or not form_data.user_type %}checked{% endif %} onchange="toggleUserTypeFields()">
+                            <div class="p-5 glass rounded-2xl flex items-center transition-all hover:bg-white/5 border border-white/10">
+                                <i class="fas fa-id-badge text-xl text-slate-500 mr-4 transition-colors"></i>
+                                <div>
+                                    <p class="text-white text-sm font-bold">Internal Staff</p>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Ops & Logistics</p>
+                                </div>
+                            </div>
                         </label>
-                        <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
-                            <input
-                                type="radio"
-                                name="user_type"
-                                value="customer"
-                                {% if form_data.user_type == 'customer' %}checked{% endif %}
-                                class="w-4 h-4 text-amber-600"
-                                onchange="toggleUserTypeFields()"
-                            >
-                            <span class="ml-3 text-white text-sm font-medium">Customer</span>
+                        <label class="relative cursor-pointer">
+                            <input type="radio" name="user_type" value="customer" class="sr-only type-radio" {% if form_data.user_type == 'customer' %}checked{% endif %} onchange="toggleUserTypeFields()">
+                            <div class="p-5 glass rounded-2xl flex items-center transition-all hover:bg-white/5 border border-white/10">
+                                <i class="fas fa-user-tag text-xl text-slate-500 mr-4 transition-colors"></i>
+                                <div>
+                                    <p class="text-white text-sm font-bold">Client Account</p>
+                                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Inventory Access</p>
+                                </div>
+                            </div>
                         </label>
                     </div>
                 </div>
 
-                <!-- Name Row -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- First Name -->
+                <!-- Personal Information -->
+                <div class="space-y-6 pt-6 border-t border-white/5">
+                    <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mb-2 block">01. Personal Data</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">First Name</label>
+                            <input type="text" name="first_name" value="{{ form_data.first_name }}" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="John">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Last Name</label>
+                            <input type="text" name="last_name" value="{{ form_data.last_name }}" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="Doe">
+                        </div>
+                    </div>
                     <div>
-                        <label for="first_name" class="block text-sm font-medium text-slate-300 mb-2">
-                            First Name
-                        </label>
-                        <input
-                            type="text"
-                            id="first_name"
-                            name="first_name"
-                            value="{{ form_data.first_name }}"
-                            required
-                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                            placeholder="John"
-                        >
-                    </div>
-
-                    <!-- Last Name -->
-                    <div>
-                        <label for="last_name" class="block text-sm font-medium text-slate-300 mb-2">
-                            Last Name
-                        </label>
-                        <input
-                            type="text"
-                            id="last_name"
-                            name="last_name"
-                            value="{{ form_data.last_name }}"
-                            required
-                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                            placeholder="Doe"
-                        >
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Academic Email</label>
+                        <input type="email" name="email" value="{{ form_data.email }}" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="j.doe@university.edu">
                     </div>
                 </div>
 
-                <!-- Email -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-slate-300 mb-2">
-                        Email Address
-                    </label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value="{{ form_data.email }}"
-                        required
-                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                        placeholder="john@example.com"
-                    >
-                </div>
-
-                <!-- Username -->
-                <div>
-                    <label for="username" class="block text-sm font-medium text-slate-300 mb-2">
-                        Username
-                    </label>
-                    <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        value="{{ form_data.username }}"
-                        required
-                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                        placeholder="johndoe"
-                    >
-                </div>
-
-                <!-- Phone Number -->
-                <div>
-                    <label for="phone_number" class="block text-sm font-medium text-slate-300 mb-2">
-                        Phone Number
-                    </label>
-                    <input
-                        type="tel"
-                        id="phone_number"
-                        name="phone_number"
-                        value="{{ form_data.phone_number }}"
-                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                        placeholder="+1234567890"
-                    >
-                    <p class="text-xs text-slate-400 mt-1">Optional: 9-15 digits (with or without +)</p>
-                </div>
-
-                <!-- Role Selection (Employee Only) -->
-                <div id="roleField" class="hidden">
-                    <label for="role" class="block text-sm font-medium text-slate-300 mb-2">
-                        User Role
-                    </label>
-                    <select
-                        id="role"
-                        name="role"
-                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                    >
-                        <option value="">-- Select a role --</option>
-                        {% for value, label in role_choices %}
-                            <option value="{{ value }}" {% if form_data.role == value %}selected{% endif %}>
-                                {{ label }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                    <p class="text-xs text-slate-400 mt-1">
-                        Select your role: Admin, Inventory Manager, Cashier, or Warehouse Staff
-                    </p>
-                </div>
-
-                <!-- Address (Customer Only) -->
-                <div id="addressField" class="hidden">
-                    <label for="address" class="block text-sm font-medium text-slate-300 mb-2">
-                        Address
-                    </label>
-                    <textarea
-                        id="address"
-                        name="address"
-                        rows="3"
-                        class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition resize-none"
-                        placeholder="Your complete address"
-                    >{{ form_data.address }}</textarea>
-                    <p class="text-xs text-slate-400 mt-1">Optional: Provide your delivery address</p>
-                </div>
-
-                <!-- Senior/PWD Status (Customer Only) -->
-                <div id="customerStatusFields" class="hidden grid grid-cols-2 gap-4">
-                    <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
-                        <input
-                            type="checkbox"
-                            name="is_senior"
-                            value="true"
-                            {% if form_data.is_senior == 'true' %}checked{% endif %}
-                            class="w-4 h-4 text-amber-600"
-                        >
-                        <span class="ml-3 text-white text-sm font-medium">Senior Citizen (20% discount)</span>
-                    </label>
-                    <label class="flex items-center p-3 bg-slate-700 border border-slate-600 rounded-lg cursor-pointer hover:border-amber-600 transition">
-                        <input
-                            type="checkbox"
-                            name="is_pwd"
-                            value="true"
-                            {% if form_data.is_pwd == 'true' %}checked{% endif %}
-                            class="w-4 h-4 text-amber-600"
-                        >
-                        <span class="ml-3 text-white text-sm font-medium">PWD (20% discount)</span>
-                    </label>
-                </div>
-
-                <!-- ID Document Upload (Customer Only) -->
-                <div id="idDocumentField" class="hidden">
-                    <label for="id_document" class="block text-sm font-medium text-slate-300 mb-2">
-                        Government ID / Identification Document
-                    </label>
-                    <div class="relative">
-                        <input
-                            type="file"
-                            id="id_document"
-                            name="id_document"
-                            accept=".pdf,.jpg,.jpeg,.png,.gif"
-                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700"
-                        >
-                    </div>
-                    <p class="text-xs text-slate-400 mt-1">Accepted formats: PDF, JPG, JPEG, PNG (Max 5MB). Required for customer approval.</p>
-                </div>
-
-                <!-- Password Row -->
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Password -->
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-slate-300 mb-2">
-                            Password
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            required
-                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                            placeholder="Min. 8 characters"
-                        >
+                <!-- Role/Address Section -->
+                <div class="space-y-6 pt-6 border-t border-white/5">
+                    <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mb-6 block">02. Operational Role</h3>
+                    
+                    <div id="roleField" class="hidden">
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">System Permissions</label>
+                        <select id="role" name="role" class="w-full px-5 py-4 input-glass rounded-2xl text-sm focus:outline-none bg-slate-900">
+                            <option value="">-- Choose Designation --</option>
+                            {% for value, label in role_choices %}
+                                {% if label == 'Admin' or label == 'Cashier' %}
+                                    <option value="{{ value }}" {% if form_data.role == value %}selected{% endif %}>{{ label }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
                     </div>
 
-                    <!-- Confirm Password -->
-                    <div>
-                        <label for="password_confirm" class="block text-sm font-medium text-slate-300 mb-2">
-                            Confirm Password
-                        </label>
-                        <input
-                            type="password"
-                            id="password_confirm"
-                            name="password_confirm"
-                            required
-                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-600 focus:border-transparent transition"
-                            placeholder="Confirm password"
-                        >
+                    <div id="addressField" class="hidden space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Permanent Residence</label>
+                            <textarea name="address" rows="3" class="w-full px-5 py-4 input-glass rounded-2xl text-sm resize-none" placeholder="Mahayag, Zamboanga del Sur">{{ form_data.address }}</textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <label class="flex items-center p-4 glass rounded-2xl cursor-pointer hover:bg-white/5 border border-white/10">
+                                <input type="checkbox" name="is_senior" value="true" class="w-4 h-4 text-primary rounded border-white/10 bg-white/5">
+                                <span class="ml-3 text-xs text-slate-400 font-bold uppercase tracking-wider">Senior Citizen</span>
+                            </label>
+                            <label class="flex items-center p-4 glass rounded-2xl cursor-pointer hover:bg-white/5 border border-white/10">
+                                <input type="checkbox" name="is_pwd" value="true" class="w-4 h-4 text-primary rounded border-white/10 bg-white/5">
+                                <span class="ml-3 text-xs text-slate-400 font-bold uppercase tracking-wider">PWD Individual</span>
+                            </label>
+                        </div>
+
+                        <div id="idDocumentField">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Verification Document (PDF/IMG)</label>
+                            <div class="relative glass border-2 border-dashed border-white/10 rounded-3xl p-8 flex items-center justify-center hover:border-primary/50 transition-all cursor-pointer">
+                                <input type="file" name="id_document" accept=".pdf,.jpg,.jpeg,.png" class="absolute inset-0 opacity-0 cursor-pointer">
+                                <div class="text-center group">
+                                    <i class="fas fa-upload text-xl text-slate-500 mb-2 group-hover:text-primary transition-colors"></i>
+                                    <p class="text-xs text-slate-400 font-bold uppercase">Attach Credentials</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Register Button -->
+                <!-- Registration Credentials -->
+                <div class="space-y-6 pt-6 border-t border-white/5">
+                    <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mb-6 block">03. Network Credentials</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Unique System ID</label>
+                            <input type="text" name="username" value="{{ form_data.username }}" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="jdoe_admin">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Password</label>
+                            <input type="password" name="password" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="••••••••">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Confirm Identity</label>
+                            <input type="password" name="password_confirm" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="••••••••">
+                        </div>
+                    </div>
+                </div>
+
                 <button
                     type="submit"
-                    class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg transition duration-200 transform hover:scale-105 mt-6"
+                    class="w-full py-5 bg-primary hover:bg-emerald-400 text-slate-900 font-black rounded-3xl transition-all btn-glow shadow-2xl shadow-primary/20 text-sm flex items-center justify-center gap-3 group mt-4 uppercase tracking-widest"
                 >
-                    Create Account
+                    Initialize Account
+                    <i class="fas fa-plus-circle group-hover:scale-110 transition-transform"></i>
                 </button>
             </form>
 
-            <!-- Divider -->
-            <div class="relative my-8">
-                <div class="absolute inset-0 flex items-center">
-                    <div class="w-full border-t border-slate-600"></div>
-                </div>
-                <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-slate-800 text-slate-400">Already have an account?</span>
-                </div>
+            <div class="mt-12 pt-10 border-t border-white/5 text-center">
+                <p class="text-slate-500 text-xs mb-4">Already participant in the registry?</p>
+                <a href="{% url 'login' %}" class="text-sm font-bold text-white hover:text-primary transition-colors flex items-center justify-center gap-2 uppercase tracking-widest">
+                    Proceed to Authorization
+                    <i class="fas fa-arrow-right text-xs"></i>
+                </a>
             </div>
-
-            <!-- Login Link -->
-            <a
-                href="{% url 'login' %}"
-                class="block w-full py-2 px-4 text-center bg-slate-700 hover:bg-slate-600 text-slate-100 font-medium rounded-lg transition duration-200"
-            >
-                Sign In
-            </a>
         </div>
 
         <!-- Footer -->
-        <p class="text-center text-slate-500 text-sm mt-6">
-            © 2024 Lumber Management System. All rights reserved.
-        </p>
+        <div class="mt-12 text-center">
+            <p class="text-slate-600 text-[10px] font-bold uppercase tracking-widest mb-1">
+                © 2026 LumberIMS • Infrastructure Management
+            </p>
+            <p class="text-slate-700 text-[9px] uppercase font-bold tracking-tighter">Academic Research • Zamboanga del Sur</p>
+        </div>
     </div>
 
     <script>
-        // Toggle fields based on user type selection
         function toggleUserTypeFields() {
             const userType = document.querySelector('input[name="user_type"]:checked').value;
             const roleField = document.getElementById('roleField');
             const addressField = document.getElementById('addressField');
-            const customerStatusFields = document.getElementById('customerStatusFields');
             const roleSelect = document.getElementById('role');
 
             if (userType === 'employee') {
-                roleField.classList.remove('hidden');
-                addressField.classList.add('hidden');
-                customerStatusFields.classList.add('hidden');
-                document.getElementById('idDocumentField').classList.add('hidden');
+                roleField.style.display = 'block';
+                addressField.style.display = 'none';
                 roleSelect.setAttribute('required', 'required');
-                roleSelect.style.display = 'block';
-                document.getElementById('address').removeAttribute('required');
-                document.getElementById('id_document').removeAttribute('required');
-            } else if (userType === 'customer') {
-                roleField.classList.add('hidden');
-                addressField.classList.remove('hidden');
-                customerStatusFields.classList.remove('hidden');
-                document.getElementById('idDocumentField').classList.remove('hidden');
+            } else {
+                roleField.style.display = 'none';
+                addressField.style.display = 'block';
                 roleSelect.removeAttribute('required');
-                roleSelect.style.display = 'none';
-                roleSelect.value = '';  // Clear role selection for customers
-                document.getElementById('id_document').setAttribute('required', 'required');
+                roleSelect.value = '';
             }
         }
 
-        // Validate form before submission
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             const userType = document.querySelector('input[name="user_type"]:checked').value;
             const roleSelect = document.getElementById('role');
-            
-            // If employee, ensure role is selected
             if (userType === 'employee' && !roleSelect.value) {
                 e.preventDefault();
-                alert('Please select a role for employee accounts');
+                alert('Conflict: Functional role selection is required for employee profiles.');
                 roleSelect.focus();
                 return false;
             }
-            
-            // Form is valid, allow submission
             return true;
         });
 
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            toggleUserTypeFields();
-        });
+        document.addEventListener('DOMContentLoaded', toggleUserTypeFields);
     </script>
 </body>
 </html>

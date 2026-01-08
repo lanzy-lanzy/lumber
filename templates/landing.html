@@ -3,16 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumber Management System - Streamline Your Inventory</title>
+    <title>Lumber Management System - Capstone Project</title>
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="Streamline your lumber business with Lumber Pro. Real-time inventory tracking, sales analytics, and delivery management.">
+    
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#10b981',
+                        secondary: '#f59e0b',
+                        dark: '#020617',
+                        card: 'rgba(15, 23, 42, 0.6)',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
     
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
+    <!-- Unpoly -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/unpoly@3.10.1/unpoly.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/unpoly@3.10.1/unpoly.min.js"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -22,1106 +52,636 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
+        [x-cloak] { display: none !important; }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #020617 !important;
+            color: #f8fafc;
             overflow-x: hidden;
         }
-
-        #canvas-container {
-            position: relative;
-            height: 600px;
-            background: linear-gradient(135deg, #7c2d12 0%, #b45309 50%, #92400e 100%);
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        
+        .glass {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        canvas {
-            display: block;
+        
+        .glass-hover:hover {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 50%, #f59e0b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-gradient {
+            background: radial-gradient(circle at top right, rgba(16, 185, 129, 0.15), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.1), transparent 40%);
+            background-color: #020617 !important;
+        }
+        
+        #three-canvas-container {
             width: 100%;
             height: 100%;
-        }
-
-        .hero {
-            position: relative;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #064e3b 100%);
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 70%);
+            z-index: 0;
+            pointer-events: auto;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: color 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -4px;
+            left: 0;
+            background-color: #10b981;
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .log-interaction-hint {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.875rem;
             pointer-events: none;
         }
 
-        .floating {
-            animation: float 6s ease-in-out infinite;
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        ::-webkit-scrollbar-track {
+            background: #020617;
         }
-
-        .glow {
-            animation: glow 2s ease-in-out infinite;
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
         }
-
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.6); }
-        }
-
-        .pulse-glow {
-            animation: pulseGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes pulseGlow {
-            0%, 100% { 
-                box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), inset 0 0 20px rgba(34, 197, 94, 0.1);
-            }
-            50% { 
-                box-shadow: 0 0 40px rgba(34, 197, 94, 0.8), inset 0 0 20px rgba(34, 197, 94, 0.2);
-            }
-        }
-
-        .gradient-text {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .feature-card {
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .feature-card:hover::before {
-            left: 100%;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(34, 197, 94, 0.1) 100%);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            backdrop-filter: blur(10px);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn-primary:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 40px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-secondary {
-            border: 2px solid rgba(16, 185, 129, 0.5);
-            color: #10b981;
-            transition: all 0.3s ease;
-        }
-
-        .btn-secondary:hover {
-            background: rgba(16, 185, 129, 0.1);
-            border-color: #10b981;
-            transform: translateY(-2px);
-        }
-
-        .navbar {
-            backdrop-filter: blur(20px);
-            background: rgba(15, 23, 42, 0.8);
-            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
-        }
-
-        .navbar-link {
-            position: relative;
-            color: #e2e8f0;
-            transition: color 0.3s ease;
-        }
-
-        .navbar-link::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #10b981;
-            transition: width 0.3s ease;
-        }
-
-        .navbar-link:hover {
-            color: #10b981;
-        }
-
-        .navbar-link:hover::after {
-            width: 100%;
-        }
-
-        .scroll-indicator {
-            animation: scroll-down 2s infinite;
-        }
-
-        @keyframes scroll-down {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
-        }
-
-        .wood-texture {
-            background: 
-                repeating-linear-gradient(
-                    90deg,
-                    rgba(101, 67, 33, 0.1) 0px,
-                    rgba(101, 67, 33, 0.1) 2px,
-                    transparent 2px,
-                    transparent 4px
-                ),
-                linear-gradient(0deg, rgba(139, 69, 19, 0.05), transparent);
-            background-size: 100% 100%, 100% 100%;
-        }
-
-        .dashboard-preview {
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            transform: perspective(1000px) rotateX(5deg);
-            transition: transform 0.3s ease;
-        }
-
-        .dashboard-preview:hover {
-            transform: perspective(1000px) rotateX(2deg) translateY(-10px);
-        }
-
-        .counter {
-            font-size: 2.5rem;
-            font-weight: bold;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .timeline {
-            position: relative;
-            padding: 20px 0;
-        }
-
-        .timeline::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 3px;
-            height: 100%;
-            background: linear-gradient(180deg, #10b981 0%, transparent 100%);
-        }
-
-        @media (max-width: 768px) {
-            .timeline::before {
-                left: 20px;
-            }
-        }
-
-        .timeline-item {
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .timeline-item:nth-child(even) {
-            text-align: right;
-        }
-
-        @media (max-width: 768px) {
-            .timeline-item:nth-child(even) {
-                text-align: left;
-            }
-        }
-
-        .timeline-dot {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 15px;
-            height: 15px;
-            background: #10b981;
-            border: 3px solid #0f172a;
-            border-radius: 50%;
-            top: 0;
-            box-shadow: 0 0 0 8px rgba(16, 185, 129, 0.1);
-        }
-
-        @media (max-width: 768px) {
-            .timeline-dot {
-                left: 20px;
-            }
-        }
-
-        .testimonial-card {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(34, 197, 94, 0.05) 100%);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-        }
-
-        .stars {
-            color: #fbbf24;
-        }
-
-        .section-title {
-            position: relative;
-            display: inline-block;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, #10b981, #059669);
-            border-radius: 2px;
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        ::-webkit-scrollbar-thumb:hover {
+            background: #334155;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100">
+<body class="font-sans antialiased">
 
     <!-- Navigation -->
-    <nav class="navbar sticky top-0 z-50 w-full">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-2 text-2xl font-bold">
-                <i class="fas fa-tree text-green-500 text-3xl"></i>
-                <span class="gradient-text">Lumber Pro</span>
-            </div>
-            <div class="hidden md:flex items-center space-x-8">
-                <a href="#features" class="navbar-link">Features</a>
-                <a href="#dashboard" class="navbar-link">Dashboard</a>
-                <a href="#contact" class="navbar-link">Contact</a>
-            </div>
-            {% if user.is_authenticated %}
-                <div class="flex items-center space-x-4">
-                    <span class="text-white">{{ user.get_full_name|default:user.username }}</span>
-                    <a href="{% url 'dashboard' %}" class="btn-primary text-white px-6 py-2 rounded-lg relative z-10 font-semibold">
-                        Dashboard
-                    </a>
-                    <a href="{% url 'logout' %}" class="text-white hover:text-gray-300 px-4 py-2">
-                        Logout
-                    </a>
+    <nav class="fixed top-0 w-full z-50 glass border-b border-white/5" x-data="{ mobileMenu: false }">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-primary/20 rounded-xl">
+                    <i class="fas fa-tree text-primary text-2xl"></i>
                 </div>
-            {% else %}
-                <a href="{% url 'login' %}" class="btn-primary text-white px-6 py-2 rounded-lg relative z-10 font-semibold">
-                    Login
-                </a>
-            {% endif %}
+                <span class="text-2xl font-display font-extrabold tracking-tight text-white">Lumber<span class="text-primary">IMS</span></span>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-10">
+                <a href="#features" class="nav-link text-sm font-medium text-slate-300 hover:text-white">Features</a>
+                <a href="#products" class="nav-link text-sm font-medium text-slate-300 hover:text-white">Catalog</a>
+                <a href="#dashboard" class="nav-link text-sm font-medium text-slate-300 hover:text-white">Dashboard</a>
+                <a href="#contact" class="nav-link text-sm font-medium text-slate-300 hover:text-white">Support</a>
+            </div>
+            
+            <div class="hidden md:flex items-center space-x-4">
+                {% if user.is_authenticated %}
+                    <div class="flex items-center space-x-6">
+                        <span class="text-sm text-slate-400">Welcome, <span class="text-white font-semibold">{{ user.username }}</span></span>
+                        <a href="{% url 'dashboard' %}" class="px-5 py-2.5 bg-primary hover:bg-primary/90 text-dark font-bold rounded-xl transition-all btn-glow shadow-lg shadow-primary/20">
+                            System Dashboard
+                        </a>
+                        <a href="{% url 'logout' %}" class="text-slate-400 hover:text-white text-sm transition-colors">Sign Out</a>
+                    </div>
+                {% else %}
+                    <div class="flex items-center space-x-6">
+                        <a href="{% url 'login' %}" class="text-slate-300 hover:text-white text-sm font-medium transition-colors">Partner Login</a>
+                        <a href="{% url 'login' %}" class="px-6 py-2.5 bg-white hover:bg-slate-100 text-dark font-bold rounded-xl transition-all shadow-lg hover:shadow-white/10">
+                            Access System
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Mobile Menu Toggle -->
+            <button @click="mobileMenu = !mobileMenu" class="md:hidden text-white p-2">
+                <i class="fas" :class="mobileMenu ? 'fa-times' : 'fa-bars'"></i>
+            </button>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div x-show="mobileMenu" x-transition x-cloak class="md:hidden glass px-6 py-8 border-t border-white/5 space-y-6">
+            <a href="#features" @click="mobileMenu = false" class="block text-lg font-medium text-slate-300">Features</a>
+            <a href="#products" @click="mobileMenu = false" class="block text-lg font-medium text-slate-300">Catalog</a>
+            <a href="#dashboard" @click="mobileMenu = false" class="block text-lg font-medium text-slate-300">Dashboard</a>
+            <div class="pt-6 border-t border-white/5 space-y-4">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="block w-full text-center py-4 bg-primary text-dark font-bold rounded-xl">System Dashboard</a>
+                {% else %}
+                    <a href="{% url 'login' %}" class="block w-full text-center py-4 bg-white text-dark font-bold rounded-xl">Partner Login</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <section class="hero min-h-screen flex items-center justify-center relative pt-20 pb-20">
-        <div class="max-w-7xl mx-auto px-6 w-full">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <!-- Left Content -->
-                <div class="z-10" data-aos="fade-right" data-aos-duration="1000">
-                    <h1 class="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                        <span class="text-white">Manage Your</span><br>
-                        <span class="gradient-text text-6xl md:text-7xl">Lumber Business</span>
-                    </h1>
-                    <p class="text-xl text-slate-300 mb-8 leading-relaxed">
-                        Complete inventory management system designed for lumber yards and construction supply businesses. 
-                        Track stock, manage sales, handle deliveries, and generate real-time analytics—all in one place.
-                    </p>
-                    
-                    <div class="flex flex-col sm:flex-row gap-4 mb-8">
-                        {% if user.is_authenticated %}
-                            <a href="{% url 'dashboard' %}" class="btn-primary text-white px-8 py-3 rounded-lg relative z-10 font-semibold text-lg inline-flex items-center justify-center">
-                                <i class="fas fa-arrow-right mr-2"></i>
-                                Go to Dashboard
-                            </a>
-                        {% else %}
-                            <a href="{% url 'login' %}" class="btn-primary text-white px-8 py-3 rounded-lg relative z-10 font-semibold text-lg inline-flex items-center justify-center">
-                                <i class="fas fa-arrow-right mr-2"></i>
-                                Get Started
-                            </a>
-                        {% endif %}
-                        <button class="btn-secondary px-8 py-3 rounded-lg font-semibold text-lg inline-flex items-center justify-center" onclick="document.getElementById('canvas-container').scrollIntoView({behavior: 'smooth'})">
-                            <i class="fas fa-play mr-2"></i>
-                            Watch Demo
-                        </button>
+    <section class="relative min-h-screen flex items-center pt-20 overflow-hidden hero-gradient">
+        <!-- Three.js Canvas Container -->
+        <div id="three-canvas-container"></div>
+        
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+            <!-- Hero Content -->
+            <div class="flex flex-col justify-center" data-aos="fade-right" data-aos-duration="1000">
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 w-max mb-6">
+                    <span class="flex h-2 w-2 rounded-full bg-primary animate-pulse"></span>
+                    <span class="text-xs font-bold text-primary uppercase tracking-wider">Capstone Study: Mahayag, Zamboanga del Sur</span>
+                </div>
+                
+                <h1 class="text-6xl md:text-7xl lg:text-8xl font-display font-extrabold leading-[1.1] mb-8">
+                    Smart <br>
+                    <span class="gradient-text">Lumber System</span>
+                </h1>
+                
+                <p class="text-xl text-slate-400 mb-10 leading-relaxed max-w-lg">
+                    Modernizing the timber trade in Mahayag. A digital solution designed to replace archaic logbooks with automated inventory, sales, and supply chain logistics.
+                </p>
+                
+                <div class="flex flex-col sm:flex-row gap-5">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="px-8 py-4 bg-primary hover:bg-emerald-400 text-dark font-black rounded-2xl transition-all btn-glow text-lg flex items-center justify-center gap-2 group shadow-xl shadow-primary/20">
+                            ACCESS SYSTEM
+                            <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="px-8 py-4 bg-primary hover:bg-emerald-400 text-dark font-black rounded-2xl transition-all btn-glow text-lg flex items-center justify-center gap-2 group shadow-xl shadow-primary/20">
+                            SYSTEM LOGIN
+                            <i class="fas fa-lock group-hover:scale-110 transition-transform"></i>
+                        </a>
+                    {% endif %}
+                    <a href="#features" class="px-8 py-4 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl transition-all border border-white/10 text-lg flex items-center justify-center gap-2 backdrop-blur-md">
+                        VIEW SYSTEM MODULES
+                    </a>
+                </div>
+                
+                <!-- Trust & Stats -->
+                <div class="mt-16 grid grid-cols-3 gap-8 border-t border-white/5 pt-10">
+                    <div>
+                        <span class="block text-3xl font-display font-bold text-white mb-1">Module</span>
+                        <span class="text-xs text-slate-500 uppercase font-extrabold tracking-widest">Inventory Track</span>
                     </div>
-
-                    <!-- Trust Badges -->
-                    <div class="flex flex-wrap gap-4 text-slate-400 text-sm">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-check text-green-500"></i>
-                            <span>Real-time Inventory</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-check text-green-500"></i>
-                            <span>Advanced Analytics</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-check text-green-500"></i>
-                            <span>24/7 Support</span>
-                        </div>
+                    <div>
+                        <span class="block text-3xl font-display font-bold text-white mb-1">Module</span>
+                        <span class="text-xs text-slate-500 uppercase font-extrabold tracking-widest">Sales & POS</span>
+                    </div>
+                    <div>
+                        <span class="block text-3xl font-display font-bold text-white mb-1">Module</span>
+                        <span class="text-xs text-slate-500 uppercase font-extrabold tracking-widest">Supply Chain</span>
                     </div>
                 </div>
-
-                <!-- Right 3D Visualization -->
-                <div class="relative" data-aos="fade-left" data-aos-duration="1000">
-                    <div id="canvas-container" class="floating"></div>
-                    <div class="absolute -bottom-6 left-0 right-0 h-32 bg-gradient-to-t from-slate-950 to-transparent"></div>
+            </div>
+            
+            <!-- Three.js Overlay Content (Optional Interaction Elements) -->
+            <div class="lg:flex hidden items-center justify-end relative pointer-events-none">
+                <div class="log-interaction-hint">
+                    <i class="fas fa-hand-pointer animate-bounce"></i>
+                    <span>Interact with the 3D logs</span>
                 </div>
             </div>
         </div>
-
-        <!-- Scroll Indicator -->
-        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2 scroll-indicator text-green-500">
-            <i class="fas fa-chevron-down text-2xl"></i>
-        </div>
+        
+        <!-- Bottom Section Mask -->
+        <div class="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-dark to-transparent z-10"></div>
     </section>
 
-    <!-- Features Section -->
-    <section id="features" class="py-20 bg-slate-900/50 relative">
+    <!-- Features Grid -->
+    <section id="features" class="py-32 relative">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">
-                    Powerful Features
-                </h2>
-                <div class="section-title inline-block">
-                    <p class="text-xl text-slate-400">Everything you need to streamline operations</p>
-                </div>
+            <div class="text-center mb-24 max-w-3xl mx-auto">
+                <span class="text-primary font-extrabold text-sm uppercase tracking-[0.3em] mb-4 block">Core Capabilities</span>
+                <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-6">Built for High-Velocity <br> Wood Operations</h2>
+                <div class="h-1.5 w-24 bg-primary mx-auto rounded-full mb-8"></div>
+                <p class="text-lg text-slate-400">Everything you need to eliminate paperwork and maximize yield from forest to yard.</p>
             </div>
-
+            
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="feature-card bg-slate-800/50 border border-slate-700 rounded-15px p-8 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="0">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 glow">
-                        <i class="fas fa-boxes text-green-500 text-3xl"></i>
+                <div class="glass glass-hover p-10 rounded-[2rem]" data-aos="fade-up" data-aos-delay="0">
+                    <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-8 border border-primary/20">
+                        <i class="fas fa-calculator text-primary text-2xl"></i>
                     </div>
-                    <h3 class="text-2xl font-bold mb-3">Real-time Inventory</h3>
-                    <p class="text-slate-400">Track stock levels across all locations with instant updates and low-stock alerts.</p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="feature-card bg-slate-800/50 border border-slate-700 rounded-15px p-8 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="100">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 glow">
-                        <i class="fas fa-cash-register text-green-500 text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">Point of Sale</h3>
-                    <p class="text-slate-400">Fast, intuitive cashier interface with automatic stock deduction and payment tracking.</p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="feature-card bg-slate-800/50 border border-slate-700 rounded-15px p-8 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="200">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 glow">
-                        <i class="fas fa-truck text-green-500 text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">Delivery Management</h3>
-                    <p class="text-slate-400">Track deliveries in real-time with driver assignment and customer signature capture.</p>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="feature-card bg-slate-800/50 border border-slate-700 rounded-15px p-8 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="300">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 glow">
-                        <i class="fas fa-chart-bar text-green-500 text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">Advanced Analytics</h3>
-                    <p class="text-slate-400">Comprehensive reporting on sales, inventory, and delivery performance with data visualization.</p>
-                </div>
-
-                <!-- Feature 5 -->
-                <div class="feature-card bg-slate-800/50 border border-slate-700 rounded-15px p-8 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="400">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 glow">
-                        <i class="fas fa-users text-green-500 text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">Role-Based Access</h3>
-                    <p class="text-slate-400">Customized dashboards for Admin, Managers, Cashiers, and Warehouse Staff.</p>
-                </div>
-
-                <!-- Feature 6 -->
-                <div class="feature-card bg-slate-800/50 border border-slate-700 rounded-15px p-8 backdrop-blur-sm" data-aos="fade-up" data-aos-delay="500">
-                    <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mb-4 glow">
-                        <i class="fas fa-lock text-green-500 text-3xl"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-3">Enterprise Security</h3>
-                    <p class="text-slate-400">CSRF protection, role-based permissions, audit trails, and secure data encryption.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="py-20 bg-gradient-to-r from-green-900/20 to-emerald-900/20">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                <div class="stat-card rounded-15px p-8 text-center" data-aos="zoom-in" data-aos-delay="0">
-                    <div class="counter" data-target="100">0</div>
-                    <p class="text-slate-400 mt-2">+ API Endpoints</p>
-                </div>
-                <div class="stat-card rounded-15px p-8 text-center" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="counter" data-target="25">0</div>
-                    <p class="text-slate-400 mt-2">Database Models</p>
-                </div>
-                <div class="stat-card rounded-15px p-8 text-center" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="counter" data-target="4">0</div>
-                    <p class="text-slate-400 mt-2">User Roles</p>
-                </div>
-                <div class="stat-card rounded-15px p-8 text-center" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="counter" data-target="30">0</div>
-                    <p class="text-slate-400 mt-2">+ Reports</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Dashboard Preview Section -->
-    <section id="dashboard" class="py-20 relative">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">
-                    Intuitive Dashboard
-                </h2>
-                <p class="text-xl text-slate-400">Beautiful, responsive interface designed for efficiency</p>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div data-aos="fade-right">
-                    <h3 class="text-3xl font-bold mb-4">Admin Overview</h3>
-                    <p class="text-slate-400 mb-4">Get a complete snapshot of your business with real-time KPIs, sales trends, inventory status, and delivery metrics.</p>
-                    <ul class="space-y-3 text-slate-300">
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check text-green-500 font-bold"></i>
-                            <span>Executive Dashboard with Key Metrics</span>
+                    <h3 class="text-2xl font-bold text-white mb-4">Volume Automation</h3>
+                    <p class="text-slate-400 leading-relaxed mb-6">Eliminate human error in board foot calculations. Our system handles complex dimensions for Gemelina, Mahogany, and more.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center text-sm text-slate-300 gap-2">
+                            <i class="fas fa-check-circle text-primary"></i> Auto Board-Foot Mapping
                         </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check text-green-500 font-bold"></i>
-                            <span>Low Stock Alerts & Aged Receivables</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check text-green-500 font-bold"></i>
-                            <span>Sales Trends & Category Analysis</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i class="fas fa-check text-green-500 font-bold"></i>
-                            <span>Supplier Performance Ranking</span>
+                        <li class="flex items-center text-sm text-slate-300 gap-2">
+                            <i class="fas fa-check-circle text-primary"></i> Species-Specific Tracking
                         </li>
                     </ul>
                 </div>
-                <div class="dashboard-preview" data-aos="fade-left">
-                    <div class="bg-gradient-to-br from-slate-100 to-slate-200 p-6 h-96">
-                        <div class="bg-white rounded-lg p-4 h-full flex flex-col">
-                            <div class="grid grid-cols-2 gap-4 mb-4">
-                                <div class="bg-gradient-to-br from-green-100 to-emerald-100 rounded-lg p-3">
-                                    <p class="text-xs text-slate-600">Total Sales</p>
-                                    <p class="text-2xl font-bold text-green-600">₱300K</p>
-                                </div>
-                                <div class="bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-3">
-                                    <p class="text-xs text-slate-600">Inventory</p>
-                                    <p class="text-2xl font-bold text-blue-600">500K BF</p>
+
+                <!-- Feature 2 -->
+                <div class="glass glass-hover p-10 rounded-[2rem]" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-16 h-16 bg-blue-500/10 rounded-2xl flex items-center justify-center mb-8 border border-blue-500/20">
+                        <i class="fas fa-book-open text-blue-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Digital Transformation</h3>
+                    <p class="text-slate-400 leading-relaxed mb-6">Move past "tattered notebooks". Centralize your operations with real-time visibility and clear audit trails.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center text-sm text-slate-300 gap-2">
+                            <i class="fas fa-check-circle text-blue-500"></i> Eliminates Redundancy
+                        </li>
+                        <li class="flex items-center text-sm text-slate-300 gap-2">
+                            <i class="fas fa-check-circle text-blue-500"></i> Hard Data Analytics
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="glass glass-hover p-10 rounded-[2rem]" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-8 border border-orange-500/20">
+                        <i class="fas fa-truck-fast text-orange-500 text-2xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-4">Fleet Intelligence</h3>
+                    <p class="text-slate-400 leading-relaxed mb-6">Manage logistics with integrated routing, driver apps, and real-time delivery status for customers.</p>
+                    <ul class="space-y-3">
+                        <li class="flex items-center text-sm text-slate-300 gap-2">
+                            <i class="fas fa-check-circle text-orange-500"></i> Dynamic Logistics Routing
+                        </li>
+                        <li class="flex items-center text-sm text-slate-300 gap-2">
+                            <i class="fas fa-check-circle text-orange-500"></i> Proof of Delivery (POD)
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Showcase (Dynamic via Alpine.js) -->
+    <section id="products" class="py-32 bg-slate-900/30 overflow-hidden" x-data="productSlider()">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+                <div>
+                    <span class="text-secondary font-extrabold text-sm uppercase tracking-[0.3em] mb-4 block">Premium Catalog</span>
+                    <h2 class="text-4xl md:text-5xl font-display font-bold text-white mb-4">Finest Grade Timber</h2>
+                    <p class="text-slate-400 max-w-xl">Browse our top-tier lumber selections, updated in real-time from our inventory systems.</p>
+                </div>
+                <div class="flex gap-4">
+                    <button @click="prev()" class="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center hover:bg-white/10 transition-all text-white">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button @click="next()" class="w-14 h-14 rounded-full bg-primary flex items-center justify-center hover:bg-primary/90 transition-all text-dark shadow-lg shadow-primary/20">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="relative">
+                <div x-ref="slider" class="flex gap-8 overflow-x-hidden scroll-smooth pb-10">
+                    <template x-for="p in products" :key="p.id">
+                        <div class="min-w-[320px] md:min-w-[400px] glass rounded-[2.5rem] overflow-hidden group cursor-pointer transition-all hover:scale-[1.02]">
+                            <div class="h-64 relative bg-slate-800">
+                                <img :src="p.image || 'https://images.unsplash.com/photo-1589710223157-c0299563bfa3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'" class="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all duration-700">
+                                <div class="absolute top-6 left-6">
+                                    <span class="px-4 py-1.5 rounded-full glass text-xs font-bold text-white uppercase tracking-wider" x-text="p.category_name"></span>
                                 </div>
                             </div>
-                            <div class="flex-1 bg-gradient-to-b from-slate-100 to-slate-50 rounded-lg p-3 overflow-hidden">
-                                <p class="text-xs text-slate-500 font-semibold mb-2">Recent Activity</p>
-                                <div class="space-y-1">
-                                    <div class="h-2 bg-slate-300 rounded-full w-full"></div>
-                                    <div class="h-2 bg-slate-300 rounded-full w-4/5"></div>
-                                    <div class="h-2 bg-slate-300 rounded-full w-3/4"></div>
+                            <div class="p-8">
+                                <h3 class="text-2xl font-bold text-white mb-2 group-hover:text-primary transition-colors" x-text="p.name"></h3>
+                                <div class="flex items-center gap-4 mb-6">
+                                    <span class="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                        <i class="fas fa-ruler"></i> <span x-text="`${p.length}ft Length`"></span>
+                                    </span>
+                                    <span class="w-1 h-1 bg-slate-700 rounded-full"></span>
+                                    <span class="text-sm font-medium text-slate-400 flex items-center gap-2">
+                                        <i class="fas fa-cubes"></i> <span x-text="`${parseInt(p.inventory?.quantity_pieces || 0)} Units`"></span>
+                                    </span>
+                                </div>
+                                <div class="flex items-center justify-between pt-6 border-t border-white/5">
+                                    <div>
+                                        <span class="text-xs text-slate-500 uppercase tracking-widest font-bold">Price</span>
+                                        <div class="text-2xl font-black text-white" x-text="'₱' + parseFloat(p.price_per_board_foot).toLocaleString()"></div>
+                                    </div>
+                                    <a :href="'/login/?next=/products/'" class="px-6 py-3 rounded-xl bg-white/5 hover:bg-primary hover:text-dark text-white font-bold transition-all border border-white/10 hover:border-primary">
+                                        Details
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Modules Section -->
-    <section class="py-20 bg-slate-900/50">
-        <div class="max-w-7xl mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="text-4xl md:text-5xl font-bold mb-4">
-                    Complete Modules
-                </h2>
-                <p class="text-xl text-slate-400">All the tools you need in one integrated platform</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Module Card -->
-                <div class="group bg-slate-800/30 border border-slate-700 rounded-15px p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer" data-aos="fade-up">
-                    <div class="flex items-start justify-between mb-3">
-                        <i class="fas fa-cubes text-green-500 text-3xl"></i>
-                        <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Phase 2</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Inventory Management</h3>
-                    <p class="text-slate-400 text-sm mb-4">Stock in/out, adjustments, real-time tracking, low-stock alerts</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Stock Tracking</span>
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Alerts</span>
-                    </div>
-                </div>
-
-                <!-- Module Card -->
-                <div class="group bg-slate-800/30 border border-slate-700 rounded-15px p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer" data-aos="fade-up" data-aos-delay="100">
-                    <div class="flex items-start justify-between mb-3">
-                        <i class="fas fa-cash-register text-green-500 text-3xl"></i>
-                        <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Phase 3</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Sales & POS</h3>
-                    <p class="text-slate-400 text-sm mb-4">Fast checkout, payment tracking, discounts, receipt generation</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">POS</span>
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Payments</span>
-                    </div>
-                </div>
-
-                <!-- Module Card -->
-                <div class="group bg-slate-800/30 border border-slate-700 rounded-15px p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer" data-aos="fade-up" data-aos-delay="200">
-                    <div class="flex items-start justify-between mb-3">
-                        <i class="fas fa-truck-moving text-green-500 text-3xl"></i>
-                        <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Phase 4</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Delivery Management</h3>
-                    <p class="text-slate-400 text-sm mb-4">Workflow tracking, driver management, signature capture, metrics</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Tracking</span>
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Analytics</span>
-                    </div>
-                </div>
-
-                <!-- Module Card -->
-                <div class="group bg-slate-800/30 border border-slate-700 rounded-15px p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer" data-aos="fade-up" data-aos-delay="300">
-                    <div class="flex items-start justify-between mb-3">
-                        <i class="fas fa-building text-green-500 text-3xl"></i>
-                        <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Phase 5</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Supplier Management</h3>
-                    <p class="text-slate-400 text-sm mb-4">Supplier profiles, POs, price history, delivery performance</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">POs</span>
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Performance</span>
-                    </div>
-                </div>
-
-                <!-- Module Card -->
-                <div class="group bg-slate-800/30 border border-slate-700 rounded-15px p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer" data-aos="fade-up" data-aos-delay="400">
-                    <div class="flex items-start justify-between mb-3">
-                        <i class="fas fa-chart-bar text-green-500 text-3xl"></i>
-                        <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Phase 6</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Reports & Analytics</h3>
-                    <p class="text-slate-400 text-sm mb-4">30+ reports, executive dashboard, KPIs, data visualization</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Reports</span>
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Analytics</span>
-                    </div>
-                </div>
-
-                <!-- Module Card -->
-                <div class="group bg-slate-800/30 border border-slate-700 rounded-15px p-6 hover:border-green-500/50 transition-all duration-300 cursor-pointer" data-aos="fade-up" data-aos-delay="500">
-                    <div class="flex items-start justify-between mb-3">
-                        <i class="fas fa-mobile-alt text-green-500 text-3xl"></i>
-                        <span class="text-xs bg-green-500/20 text-green-400 px-3 py-1 rounded-full">Phase 7</span>
-                    </div>
-                    <h3 class="text-xl font-bold mb-2">Frontend & UI</h3>
-                    <p class="text-slate-400 text-sm mb-4">Responsive dashboards, HTMX integration, interactive components</p>
-                    <div class="flex flex-wrap gap-2">
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Responsive</span>
-                        <span class="text-xs bg-slate-700/50 text-slate-300 px-2 py-1 rounded">Modern</span>
-                    </div>
-                </div>
-            </div>
+    <!-- Call to Action -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/10 blur-[120px] rounded-full"></div>
         </div>
-    </section>
-
-    <!-- Featured Products Section -->
-     <section id="products" class="py-24 relative overflow-hidden">
-         <!-- Animated Background -->
-         <div class="absolute inset-0">
-             <div class="absolute inset-0 bg-gradient-to-r from-amber-900/20 via-orange-900/10 to-amber-900/20 blur-3xl"></div>
-             <div class="absolute top-0 left-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl animate-pulse"></div>
-             <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-600/10 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
-         </div>
-
-         <div class="max-w-7xl mx-auto px-6 relative z-10">
-             <!-- Section Header -->
-             <div class="text-center mb-16">
-                 <div class="inline-block mb-4">
-                     <span class="text-sm font-bold text-amber-400 uppercase tracking-widest bg-amber-500/20 px-4 py-2 rounded-full border border-amber-500/30">
-                         <i class="fas fa-crown mr-2"></i>Premium Selection
-                     </span>
-                 </div>
-                 <h2 class="text-5xl md:text-6xl font-bold mb-4">
-                     <span class="text-white">Discover Our</span><br>
-                     <span class="bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 bg-clip-text text-transparent">Finest Lumber</span>
-                 </h2>
-                 <p class="text-xl text-slate-400 max-w-2xl mx-auto">Hand-selected premium lumber products for your construction needs. Browse, compare, and find the perfect materials for your project.</p>
-             </div>
-
-             <div x-data="landingProducts()" x-init="init()" class="space-y-8">
-                 <!-- Loading Indicator -->
-                 <template x-if="isLoading">
-                     <div class="flex items-center justify-center py-20">
-                         <div class="text-center">
-                             <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-amber-600/30 border-t-amber-500"></div>
-                             <p class="text-slate-400 mt-4 font-medium">Loading premium products...</p>
-                         </div>
-                     </div>
-                 </template>
-
-                 <!-- Products Grid -->
-                 <template x-if="!isLoading && products.length > 0">
-                     <div>
-                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                             <template x-for="(product, index) in products.slice(0, 8)" :key="product.id">
-                                 <div class="group relative cursor-pointer" @click="viewProduct(product.id)" :style="`animation-delay: ${index * 50}ms;`" style="animation: slideInUp 0.6s ease-out forwards;">
-                                     <!-- Card Container -->
-                                     <div class="relative h-full bg-gradient-to-br from-slate-800/80 to-slate-800/40 border border-slate-700/50 rounded-2xl overflow-hidden transition-all duration-500 hover:border-amber-600/80 hover:shadow-2xl hover:shadow-amber-600/20 backdrop-blur-sm">
-                                         <!-- Image Section -->
-                                         <div class="relative h-56 bg-gradient-to-br from-slate-700 to-slate-800 overflow-hidden">
-                                             <!-- Product Image -->
-                                             <template x-if="product.image">
-                                                 <img :src="product.image" :alt="product.name" 
-                                                      class="w-full h-full object-cover group-hover:scale-125 transition-transform duration-700 ease-out">
-                                             </template>
-                                             <template x-if="!product.image">
-                                                 <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-800">
-                                                     <i class="fas fa-wood text-5xl text-slate-600"></i>
-                                                 </div>
-                                             </template>
-                                             
-                                             <!-- Overlay Gradient -->
-                                             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-0 group-hover:opacity-80 transition-opacity duration-500"></div>
-                                             
-                                             <!-- Category Badge -->
-                                             <div class="absolute top-4 right-4 px-3 py-1.5 bg-gradient-to-r from-amber-600 to-orange-600 backdrop-blur-md rounded-full text-xs font-bold text-white shadow-lg transform transition-transform group-hover:scale-110 duration-300">
-                                                 <i class="fas fa-tag mr-1"></i>
-                                                 <span x-text="getCategoryLabel(product.category)"></span>
-                                             </div>
-
-                                             <!-- Stock Status Badge -->
-                                             <div class="absolute bottom-4 left-4 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-md shadow-lg"
-                                                  :class="product.inventory_qty > 20 ? 'bg-green-500/90 text-white' : product.inventory_qty > 5 ? 'bg-yellow-500/90 text-white' : 'bg-red-500/90 text-white'">
-                                                 <i class="fas" :class="product.inventory_qty > 20 ? 'fa-check-circle' : 'fa-exclamation-circle'" :=""></i>
-                                                 <span x-text="product.inventory_qty > 20 ? 'In Stock' : product.inventory_qty > 5 ? 'Low Stock' : 'Urgent'"></span>
-                                             </div>
-
-                                             <!-- Hover Button -->
-                                             <button class="absolute bottom-4 right-4 px-4 py-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white rounded-lg font-semibold text-sm shadow-lg transform transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0">
-                                                 <i class="fas fa-eye mr-2"></i>View Details
-                                             </button>
-                                         </div>
-                                         
-                                         <!-- Info Section -->
-                                         <div class="p-6 h-full flex flex-col justify-between">
-                                             <!-- Title & Dimensions -->
-                                             <div>
-                                                 <h4 class="font-bold text-slate-100 text-base mb-2 line-clamp-2 group-hover:text-amber-300 transition-colors duration-300" x-text="product.name"></h4>
-                                                 <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-700/30 px-3 py-2 rounded-lg">
-                                                     <i class="fas fa-ruler-combined text-amber-500"></i>
-                                                     <span x-text='`${product.thickness}" × ${product.width}" × ${product.length}ft`'></span>
-                                                 </div>
-                                             </div>
-
-                                             <!-- Pricing Section -->
-                                             <div class="space-y-3 pt-4 mt-4 border-t border-slate-600/50">
-                                                 <div class="flex items-end justify-between">
-                                                     <div>
-                                                         <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Per Board Foot</p>
-                                                         <p class="text-2xl font-bold text-amber-400 mt-1" x-text="`₱${parseFloat(product.price_per_board_foot).toFixed(2)}`"></p>
-                                                     </div>
-                                                     <div class="text-right">
-                                                         <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Stock Count</p>
-                                                         <p class="text-lg font-bold" :class="product.inventory_qty > 20 ? 'text-green-400' : product.inventory_qty > 5 ? 'text-yellow-400' : 'text-red-400'" x-text="product.inventory_qty"></p>
-                                                     </div>
-                                                 </div>
-                                                 <template x-if="product.price_per_piece">
-                                                     <div class="bg-slate-700/30 rounded-lg p-3">
-                                                         <p class="text-xs text-slate-500 font-semibold uppercase tracking-wide">Per Piece</p>
-                                                         <p class="text-lg font-bold text-green-400 mt-1" x-text="`₱${parseFloat(product.price_per_piece).toFixed(2)}`"></p>
-                                                     </div>
-                                                 </template>
-                                             </div>
-                                         </div>
-                                     </div>
-                                 </div>
-                             </template>
-                         </div>
-
-                         <!-- View All Button -->
-                         <div class="text-center mt-16">
-                             {% if user.is_authenticated %}
-                                 <a href="{% url 'products' %}" class="inline-block px-10 py-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:via-orange-700 hover:to-amber-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-600/30 group">
-                                     <i class="fas fa-shopping-cart mr-2 group-hover:mr-3 transition-all"></i>
-                                     Browse Full Catalog
-                                 </a>
-                             {% else %}
-                                 <a href="{% url 'login' %}" class="inline-block px-10 py-4 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 hover:from-amber-700 hover:via-orange-700 hover:to-amber-800 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-amber-600/30 group">
-                                     <i class="fas fa-lock mr-2 group-hover:mr-3 transition-all"></i>
-                                     Login to Shop
-                                 </a>
-                             {% endif %}
-                         </div>
-                     </div>
-                 </template>
-
-                 <!-- Empty State -->
-                 <template x-if="!isLoading && products.length === 0">
-                     <div class="text-center py-20 bg-gradient-to-br from-slate-800/50 to-slate-800/30 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
-                         <div class="w-24 h-24 bg-gradient-to-br from-slate-700/50 to-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6 border border-slate-600/50">
-                             <i class="fas fa-inbox text-4xl text-slate-500"></i>
-                         </div>
-                         <p class="text-slate-400 font-semibold text-lg">No products available</p>
-                         <p class="text-slate-500 text-sm mt-2">Check back soon for our premium lumber selection</p>
-                     </div>
-                 </template>
-             </div>
-         </div>
-     </section>
-
-
-
-    <!-- Capstone Project Footer -->
-    <section class="py-10 relative overflow-hidden bg-slate-900 border-t border-slate-800">
-        <div class="max-w-4xl mx-auto px-6 relative z-10 text-center" data-aos="fade-up">
-            <h2 class="text-2xl font-bold mb-2">Lumber Management System 2025</h2>
+        
+        <div class="max-w-5xl mx-auto px-6 relative z-10 text-center glass p-20 rounded-[4rem]">
+            <h2 class="text-5xl md:text-6xl font-display font-extrabold text-white mb-8 leading-tight">Solving Local <span class="text-primary">Operational Gaps</span></h2>
+            <p class="text-xl text-slate-400 mb-12 max-w-2xl mx-auto leading-relaxed">
+                A technical capstone study for standardizing lumberyard operations in Zamboanga del Sur.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-6 justify-center">
+                <a href="{% url 'login' %}" class="px-12 py-5 bg-primary hover:bg-primary/90 text-dark font-black rounded-2xl transition-all btn-glow shadow-2xl shadow-primary/30 text-xl tracking-wide uppercase">
+                    Access System Dashboard
+                </a>
+                <a href="#" class="px-12 py-5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-2xl transition-all border border-white/10 text-xl backdrop-blur-sm">
+                    Review Documentation
+                </a>
+            </div>
+            <div class="mt-16 flex flex-wrap justify-center items-center gap-10 opacity-70">
+                <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">Powered By</span>
+                <i class="fab fa-python text-3xl text-slate-400"></i>
+                <i class="fab fa-js text-3xl text-slate-400"></i>
+                <i class="fas fa-database text-2xl text-slate-400"></i>
+                <span class="text-slate-400 font-display font-bold">DJANGO</span>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer id="contact" class="bg-slate-900/80 border-t border-slate-800 py-12">
+    <footer class="py-20 border-t border-white/5">
         <div class="max-w-7xl mx-auto px-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-                <div>
-                    <div class="flex items-center space-x-2 text-xl font-bold mb-4">
-                        <i class="fas fa-tree text-green-500 text-2xl"></i>
-                        <span class="gradient-text">Lumber Pro</span>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
+                <div class="col-span-1 md:col-span-1">
+                    <div class="flex items-center space-x-3 mb-8">
+                        <div class="p-1.5 bg-primary/20 rounded-lg">
+                            <i class="fas fa-tree text-primary text-xl"></i>
+                        </div>
+                        <span class="text-xl font-display font-medium text-white">Lumber<span class="text-primary">IMS</span></span>
                     </div>
-                    <p class="text-slate-400 text-sm">Complete inventory management for lumber businesses.</p>
+                    <p class="text-slate-500 mb-8 leading-relaxed">Defining the next generation of timber management since 2026.</p>
+                    <div class="flex gap-4">
+                        <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-400 hover:text-white hover:bg-primary hover:border-primary transition-all">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center text-slate-400 hover:text-white hover:bg-primary hover:border-primary transition-all">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                    </div>
                 </div>
+                
                 <div>
-                    <h4 class="font-bold mb-4 text-slate-200">Product</h4>
-                    <ul class="space-y-2 text-slate-400 text-sm">
-                        <li><a href="#features" class="hover:text-green-400">Features</a></li>
-                        <li><a href="#" class="hover:text-green-400">Security</a></li>
+                    <h4 class="text-white font-bold mb-8 uppercase tracking-widest text-xs">Platform</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Dashboard</a></li>
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Inventory API</a></li>
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Fleet Tracking</a></li>
                     </ul>
                 </div>
+
                 <div>
-                    <h4 class="font-bold mb-4 text-slate-200">Support</h4>
-                    <ul class="space-y-2 text-slate-400 text-sm">
-                        <li><a href="#" class="hover:text-green-400">Documentation</a></li>
-                        <li><a href="#" class="hover:text-green-400">API Docs</a></li>
-                        <li><a href="#" class="hover:text-green-400">Contact Support</a></li>
+                    <h4 class="text-white font-bold mb-8 uppercase tracking-widest text-xs">Resources</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Documentation</a></li>
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">API Reference</a></li>
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Yard Setup Guide</a></li>
                     </ul>
                 </div>
+
                 <div>
-                    <h4 class="font-bold mb-4 text-slate-200">Follow Us</h4>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-slate-400 hover:text-green-400"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-green-400"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-slate-400 hover:text-green-400"><i class="fab fa-linkedin"></i></a>
-                    </div>
+                    <h4 class="text-white font-bold mb-8 uppercase tracking-widest text-xs">Legal</h4>
+                    <ul class="space-y-4">
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Terms of Service</a></li>
+                        <li><a href="#" class="text-slate-500 hover:text-primary transition-colors text-sm">Privacy Policy</a></li>
+                    </ul>
                 </div>
             </div>
-            <div class="border-t border-slate-800 pt-8 text-center text-slate-400">
-                <p>&copy; 2024 Lumber Pro. All rights reserved.</p>
+            
+            <div class="pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+                <p class="text-slate-600 text-sm">© 2026 Lumber Management System - Capstone Project. Built for Academic Purposes.</p>
+                <div class="flex items-center gap-6 text-slate-600 text-xs font-bold uppercase tracking-tight">
+                    <span>System Status: Operational</span>
+                    <span class="w-2 h-2 rounded-full bg-primary"></span>
+                    <span>Version 2.1.0</span>
+                </div>
             </div>
         </div>
     </footer>
 
-    <!-- Scripts -->
+    <!-- Three.js Interactive Component Script -->
     <script>
-        // Initialize AOS
-        AOS.init();
-
-        // Three.js Scene Setup
-        function initThreeJS() {
-            const container = document.getElementById('canvas-container');
+        class LumberScene {
+            constructor() {
+                this.container = document.getElementById('three-canvas-container');
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(50, this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+                this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                this.raycaster = new THREE.Raycaster();
+                this.mouse = new THREE.Vector2();
+                this.logs = [];
+                this.targetRotation = { x: 0, y: 0 };
+                this.currentRotation = { x: 0, y: 0 };
+                
+                this.init();
+            }
             
-            // Scene setup
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            init() {
+                this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.container.appendChild(this.renderer.domElement);
+                
+                this.camera.position.z = 10;
+                this.scene.fog = new THREE.Fog(0x020617, 5, 15);
+                
+                this.addLights();
+                this.createLumberPile();
+                this.setupEventListeners();
+                this.animate();
+            }
             
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setClearColor(0xb45309, 0.1);
-            container.appendChild(renderer.domElement);
-
-            camera.position.set(0, 0, 5);
-
-            // Create lumber pieces (boxes)
-            const lumberGroup = new THREE.Group();
-            scene.add(lumberGroup);
-
-            // Create 3D lumber pieces with different colors and sizes
-            const lumberPieces = [];
-            const colors = [0x8B4513, 0xA0522D, 0x654321, 0x704214, 0x966633];
-
-            for (let i = 0; i < 8; i++) {
-                const width = 0.5 + Math.random() * 0.3;
-                const height = 0.2 + Math.random() * 0.15;
-                const depth = 2 + Math.random() * 1;
+            addLights() {
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                this.scene.add(ambientLight);
                 
-                const geometry = new THREE.BoxGeometry(width, height, depth);
-                const material = new THREE.MeshPhongMaterial({ 
-                    color: colors[i % colors.length],
-                    shininess: 100
-                });
+                const spotLight = new THREE.SpotLight(0x10b981, 1);
+                spotLight.position.set(10, 10, 10);
+                spotLight.angle = 0.5;
+                spotLight.penumbra = 0.5;
+                this.scene.add(spotLight);
                 
-                const mesh = new THREE.Mesh(geometry, material);
+                const accentLight = new THREE.PointLight(0xf59e0b, 0.5);
+                accentLight.position.set(-10, -5, 5);
+                this.scene.add(accentLight);
+            }
+            
+            createLumberPile() {
+                const logGroup = new THREE.Group();
                 
-                mesh.position.x = (i - 3.5) * 0.8;
-                mesh.position.y = (Math.random() - 0.5) * 0.5;
-                mesh.rotation.z = (Math.random() - 0.5) * 0.3;
-                
-                mesh.velocity = {
-                    x: (Math.random() - 0.5) * 0.01,
-                    y: (Math.random() - 0.5) * 0.01,
-                    z: (Math.random() - 0.5) * 0.005
+                // Procedural wood shader-like material
+                const createLogMaterial = (color) => {
+                    return new THREE.MeshPhongMaterial({
+                        color: color,
+                        shininess: 10,
+                        flatShading: false,
+                        specular: 0x111111
+                    });
                 };
                 
-                lumberGroup.add(mesh);
-                lumberPieces.push(mesh);
-            }
-
-            // Lighting
-            const ambientLight = new THREE.AmbientLight(0xffd699, 0.7);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0xffc966, 0.9);
-            directionalLight.position.set(5, 10, 7);
-            scene.add(directionalLight);
-
-            const pointLight = new THREE.PointLight(0x10b981, 0.6);
-            pointLight.position.set(-5, 5, 5);
-            scene.add(pointLight);
-
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-
-                // Rotate entire group
-                lumberGroup.rotation.x += 0.0005;
-                lumberGroup.rotation.y += 0.001;
-
-                // Individual lumber piece animations
-                lumberPieces.forEach((piece, index) => {
-                    piece.position.x += piece.velocity.x;
-                    piece.position.y += piece.velocity.y;
-                    piece.position.z += piece.velocity.z;
+                const woodColors = [0x8B4513, 0xA0522D, 0x654321, 0x704214];
+                
+                for(let i = 0; i < 24; i++) {
+                    const radius = 0.2 + Math.random() * 0.3;
+                    const len = 4 + Math.random() * 4;
+                    const geometry = new THREE.CylinderGeometry(radius, radius, len, 12);
                     
-                    piece.rotation.x += 0.002;
-                    piece.rotation.z += 0.001;
-
-                    // Boundary checking
-                    if (Math.abs(piece.position.x) > 2) piece.velocity.x *= -1;
-                    if (Math.abs(piece.position.y) > 1) piece.velocity.y *= -1;
-                });
-
-                renderer.render(scene, camera);
+                    // Rotate geometry to make it horizontal
+                    geometry.rotateZ(Math.PI / 2);
+                    
+                    const material = createLogMaterial(woodColors[i % woodColors.length]);
+                    const log = new THREE.Mesh(geometry, material);
+                    
+                    // Random placement in a "pile"
+                    log.position.x = (Math.random() - 0.5) * 6 + 4; // Shift to right side
+                    log.position.y = (Math.random() - 0.5) * 6;
+                    log.position.z = (Math.random() - 0.5) * 4;
+                    
+                    log.rotation.y = (Math.random() - 0.5) * 0.5;
+                    log.rotation.z = (Math.random() - 0.5) * 0.2;
+                    
+                    // Store initial state for interactions
+                    log.userData = {
+                        initialPos: log.position.clone(),
+                        initialRot: log.rotation.clone(),
+                        floatOffset: Math.random() * Math.PI * 2,
+                        interactive: true
+                    };
+                    
+                    this.logs.push(log);
+                    logGroup.add(log);
+                }
+                
+                this.scene.add(logGroup);
+                this.logGroup = logGroup;
             }
-
-            animate();
-
-            // Handle window resize
-            window.addEventListener('resize', () => {
-                const width = container.clientWidth;
-                const height = container.clientHeight;
-                camera.aspect = width / height;
-                camera.updateProjectionMatrix();
-                renderer.setSize(width, height);
-            });
-        }
-
-        // Counter Animation
-        function animateCounters() {
-            const counters = document.querySelectorAll('.counter');
             
-            const observerOptions = {
-                threshold: 0.5
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const counter = entry.target;
-                        const target = parseInt(counter.dataset.target);
-                        const duration = 2000;
-                        const start = Date.now();
-
-                        function update() {
-                            const elapsed = Date.now() - start;
-                            const progress = Math.min(elapsed / duration, 1);
-                            const value = Math.floor(progress * target);
-                            counter.textContent = value;
-
-                            if (progress < 1) {
-                                requestAnimationFrame(update);
-                            }
-                        }
-
-                        update();
-                        observer.unobserve(counter);
+            setupEventListeners() {
+                window.addEventListener('resize', () => this.handleResize());
+                window.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+                
+                // Click interaction
+                window.addEventListener('mousedown', () => {
+                    this.logs.forEach(log => {
+                        log.userData.targetZ = (Math.random() - 0.5) * 2;
+                    });
+                });
+            }
+            
+            handleResize() {
+                this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+            }
+            
+            handleMouseMove(e) {
+                this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+                this.mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                
+                // Set target rotation for the whole group based on mouse
+                this.targetRotation.y = this.mouse.x * 0.2;
+                this.targetRotation.x = -this.mouse.y * 0.1;
+            }
+            
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                const time = Date.now() * 0.001;
+                
+                // Smooth rotation interpolation
+                this.currentRotation.x += (this.targetRotation.x - this.currentRotation.x) * 0.05;
+                this.currentRotation.y += (this.targetRotation.y - this.currentRotation.y) * 0.05;
+                
+                this.logGroup.rotation.x = this.currentRotation.x;
+                this.logGroup.rotation.y = this.currentRotation.y;
+                
+                // Individual log floating and mouse interaction
+                this.logs.forEach(log => {
+                    // Slight floating
+                    const offset = log.userData.floatOffset;
+                    log.position.y = log.userData.initialPos.y + Math.sin(time + offset) * 0.1;
+                    
+                    // Mouse proximity effect
+                    this.raycaster.setFromCamera(this.mouse, this.camera);
+                    const intersects = this.raycaster.intersectObject(log);
+                    
+                    if (intersects.length > 0) {
+                        log.position.z += (1 - log.position.z) * 0.1;
+                        log.scale.set(1.05, 1.05, 1.05);
+                        log.material.emissive.setHex(0x10b981);
+                        log.material.emissiveIntensity = 0.2;
+                    } else {
+                        log.position.z += (log.userData.initialPos.z - log.position.z) * 0.05;
+                        log.scale.set(1, 1, 1);
+                        log.material.emissiveIntensity = 0;
                     }
                 });
-            }, observerOptions);
-
-            counters.forEach(counter => observer.observe(counter));
+                
+                this.renderer.render(this.scene, this.camera);
+            }
         }
 
-        // Landing Products Function
-        function landingProducts() {
+        // Initialize Products and Scene
+        function productSlider() {
             return {
                 products: [],
-                categories: [],
                 isLoading: false,
-
                 async init() {
-                    await this.loadCategories();
-                    await this.loadProducts();
-                },
-
-                async loadCategories() {
-                    try {
-                        const response = await fetch('/api/categories/');
-                        if (response.ok) {
-                            const data = await response.json();
-                            this.categories = Array.isArray(data) ? data : data.results || [];
-                        }
-                    } catch (error) {
-                        console.error('Error loading categories:', error);
-                    }
-                },
-
-                async loadProducts() {
-                    this.isLoading = true;
                     try {
                         const response = await fetch('/api/products/?page_size=8');
                         if (response.ok) {
                             const data = await response.json();
-                            this.products = (data.results || data || []).map(p => ({
-                                ...p,
-                                board_feet: this.calculateBoardFeet(p.thickness, p.width, p.length),
-                                inventory_qty: p.inventory?.quantity_pieces || 0,
-                                inventory_board_feet: p.inventory?.total_board_feet || 0,
-                            }));
+                            this.products = data.results || data || [];
                         }
-                    } catch (error) {
-                        console.error('Error loading products:', error);
-                    } finally {
-                        this.isLoading = false;
-                    }
+                    } catch (e) { console.error(e); }
                 },
-
-                calculateBoardFeet(thickness, width, length) {
-                    return (thickness * width * length) / 12;
+                next() {
+                    const s = this.$refs.slider;
+                    s.scrollLeft += 400;
+                    if (s.scrollLeft + s.clientWidth >= s.scrollWidth) s.scrollLeft = 0;
                 },
-
-                getCategoryLabel(categoryId) {
-                    const category = this.categories.find(c => c.id === categoryId);
-                    return category ? category.name : 'Unknown';
-                },
-
-                viewProduct(id) {
-                    console.log('View product:', id);
+                prev() {
+                    const s = this.$refs.slider;
+                    s.scrollLeft -= 400;
+                    if (s.scrollLeft <= 0) s.scrollLeft = s.scrollWidth;
                 }
-            };
+            }
         }
 
-        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            initThreeJS();
-            animateCounters();
-        });
-
-        // Smooth scroll for navigation
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
+            AOS.init({
+                once: true,
+                offset: 100
             });
+            new LumberScene();
         });
     </script>
 </body>
