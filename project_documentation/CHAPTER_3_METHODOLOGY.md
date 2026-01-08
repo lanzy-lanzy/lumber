@@ -154,3 +154,176 @@ The diagram identifies three primary actors: the **Administrator**, the **Invent
 *   The **Inventory Manager** focuses on the supply side, responsible for managing product data, handling supplier interactions, and generating inventory reports. A key interaction here is the "Calculate Board Feet" use case, which is an integral part of managing inventory.
 *   The **Cashier** is primarily concerned with the sales process. Their permissions are limited to processing transactions, generating receipts, and viewing product availability (inventory) to answer customer queries. 
 The diagram also illustrates dependencies, such as the "Process Sales Transaction" use case automatically including the "Generate Digital Receipt" function, highlighting the system's automated workflow.
+
+## Sequence Diagram
+
+The Sequence Diagram illustrates the step-by-step interaction between the user and the system components over time. It details how the system processes a sales transaction, from the initial product search to the final database update and receipt generation.
+
+### Figure 4. Sequence Diagram for Sales Transaction Process
+
+```mermaid
+sequenceDiagram
+    participant C as Cashier
+    participant S as System (Backend)
+    participant DB as Database
+
+    C->>S: Search for Product (Name/Category)
+    S->>DB: Query Product Availability & Price
+    DB-->>S: Return Product Data
+    S-->>C: Display Search Results
+
+    C->>S: Add Product to Digital Cart
+    S->>S: Calculate Running Total & Tax
+
+    C->>S: Initiate Checkout (Select Payment)
+    
+    alt Sufficient Cash Provided
+        S->>S: Calculate Change
+    else COD / Delivery
+        S->>S: Record Delivery Details
+    end
+
+    S->>DB: Update Inventory (Deduct Sold Items)
+    DB-->>S: Confirm Stock Update
+    
+    S->>DB: Store Transaction Record
+    DB-->>S: Return Transaction ID
+    
+    S->>S: Generate Digital Receipt (PDF)
+    S-->>C: Display Success & Provide Download link
+```
+
+**Description:**
+The sequence diagram details the interaction between the Cashier, the System Backend, and the Database during a sale. It highlights the logic for real-time stock verification and the conditional branching for different payment methods. Crucially, it shows that the inventory update and transaction storage happen sequentially, ensuring data integrity before the digital receipt is generated for the customer.
+
+### Figure 5. Sequence Diagram for Inventory Management and Board Feet Calculation
+
+```mermaid
+sequenceDiagram
+    participant A as Admin/Inv. Manager
+    participant S as System (Backend)
+    participant DB as Database
+
+    A->>S: Access Inventory Module
+    S->>DB: Fetch Current Stock & Suppliers
+    DB-->>S: Return Stock List
+    S-->>A: Display Inventory Dashboard
+
+    A->>S: Input New Stock Dimensions (T, W, L)
+    S->>S: Calculate Board Feet (T" x W" x L' / 12)
+    S-->>A: Display Calculated Volume
+
+    A->>S: Submit New Stock Entry
+    S->>DB: Record New Inventory Data
+    DB-->>S: Confirmation
+    
+    S->>DB: Create Log Entry (Action Trace)
+    DB-->>S: Success
+    
+    S-->>A: Show Success Notification
+```
+
+**Description:**
+This diagram illustrates the process of updating inventory, focusing on the system's internal computational logic. When an Administrator or Inventory Manager inputs wood dimensions, the system performs an immediate board feet calculation. Upon submission, the system ensures that both the inventory levels are updated and an audit trail (log entry) is created, maintaining accountability for all stock changes.
+
+## Class Diagram
+
+The Class Diagram represents the static structure of the Lumber Management System, showing the system's classes, their attributes, methods, and the relationships between objects. This structural model is essential for understanding how data is organized and how the different modules of the application (Inventory, Sales, and Authentication) interact at the database level.
+
+### Figure 6. Figure
+
+```mermaid
+classDiagram
+    class LumberCategory {
+        +String name
+        +String description
+        +DateTime created_at
+    }
+
+    class LumberProduct {
+        +String name
+        +String sku
+        +Decimal thickness
+        +Decimal width
+        +Decimal length
+        +Decimal price_per_board_foot
+        +Decimal price_per_piece
+        +Boolean is_active
+        +calculate_board_feet(quantity)
+        +board_feet() property
+    }
+
+    class Inventory {
+        +Integer quantity_pieces
+        +Decimal total_board_feet
+        +DateTime last_updated
+    }
+
+    class StockTransaction {
+        +String transaction_type
+        +Integer quantity_pieces
+        +Decimal board_feet
+        +String reason
+        +String reference_id
+        +DateTime created_at
+    }
+
+    class Customer {
+        +String name
+        +String email
+        +String phone_number
+        +String address
+        +Boolean is_senior
+        +Boolean is_pwd
+    }
+
+    class SalesOrder {
+        +String so_number
+        +String order_source
+        +Decimal total_amount
+        +Decimal discount
+        +Decimal amount_paid
+        +Decimal balance
+        +String payment_type
+        +calculate_total()
+        +apply_discount()
+    }
+
+    class SalesOrderItem {
+        +Integer quantity_pieces
+        +Decimal board_feet
+        +Decimal unit_price
+        +Decimal subtotal
+        +calculate_board_feet()
+    }
+
+    class Receipt {
+        +String receipt_number
+        +Decimal amount_tendered
+        +Decimal change
+        +DateTime created_at
+    }
+
+    class CustomUser {
+        +String username
+        +String email
+        +String role
+    }
+
+    %% Relationships
+    LumberCategory "1" -- "*" LumberProduct : categorizes
+    LumberProduct "1" -- "1" Inventory : tracks stock
+    LumberProduct "1" -- "*" StockTransaction : records changes
+    LumberProduct "1" -- "*" SalesOrderItem : included in
+    
+    Customer "1" -- "*" SalesOrder : places
+    SalesOrder "1" -- "*" SalesOrderItem : contains
+    SalesOrder "1" -- "1" Receipt : generates
+    
+    CustomUser "1" -- "*" StockTransaction : manages
+    CustomUser "1" -- "*" SalesOrder : processes
+    CustomUser "1" -- "*" Receipt : issues
+```
+
+**Description:**
+The Class Diagram highlights the central role of the `LumberProduct` class, which connects the inventory and sales modules. The `Inventory` class maintains a one-to-one relationship with products for real-time tracking, while `StockTransaction` provides a historical ledger of movements. On the sales side, a `SalesOrder` links a `Customer` to multiple `SalesOrderItem` entries, which in turn reference specific products. The `CustomUser` class acts as the actor for all sensitive operations, ensuring that every stock update and sale is tied to a specific system user (Admin or Cashier) for auditing purposes. This architecture ensures data normalization and referential integrity across the entire management system.
