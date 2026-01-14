@@ -137,32 +137,8 @@
             <form method="POST" class="space-y-10" id="registrationForm" enctype="multipart/form-data">
                 {% csrf_token %}
 
-                <!-- Identity Selection -->
-                <div class="space-y-5">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1">Identity Profile</label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <label class="relative cursor-pointer">
-                            <input type="radio" name="user_type" value="employee" class="sr-only type-radio" {% if form_data.user_type == 'employee' or not form_data.user_type %}checked{% endif %} onchange="toggleUserTypeFields()">
-                            <div class="p-5 glass rounded-2xl flex items-center transition-all hover:bg-white/5 border border-white/10">
-                                <i class="fas fa-id-badge text-xl text-slate-500 mr-4 transition-colors"></i>
-                                <div>
-                                    <p class="text-white text-sm font-bold">Internal Staff</p>
-                                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Ops & Logistics</p>
-                                </div>
-                            </div>
-                        </label>
-                        <label class="relative cursor-pointer">
-                            <input type="radio" name="user_type" value="customer" class="sr-only type-radio" {% if form_data.user_type == 'customer' %}checked{% endif %} onchange="toggleUserTypeFields()">
-                            <div class="p-5 glass rounded-2xl flex items-center transition-all hover:bg-white/5 border border-white/10">
-                                <i class="fas fa-user-tag text-xl text-slate-500 mr-4 transition-colors"></i>
-                                <div>
-                                    <p class="text-white text-sm font-bold">Client Account</p>
-                                    <p class="text-[10px] text-slate-500 uppercase font-bold tracking-tight">Inventory Access</p>
-                                </div>
-                            </div>
-                        </label>
-                    </div>
-                </div>
+                <!-- User Type (Hidden - Customer Only) -->
+                <input type="hidden" name="user_type" value="customer">
 
                 <!-- Personal Information -->
                 <div class="space-y-6 pt-6 border-t border-white/5">
@@ -177,46 +153,20 @@
                             <input type="text" name="last_name" value="{{ form_data.last_name }}" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="Doe">
                         </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Academic Email</label>
-                        <input type="email" name="email" value="{{ form_data.email }}" required class="w-full px-5 py-4 input-glass rounded-2xl text-sm" placeholder="j.doe@university.edu">
-                    </div>
+
                 </div>
 
-                <!-- Role/Address Section -->
+                <!-- Customer Information -->
                 <div class="space-y-6 pt-6 border-t border-white/5">
-                    <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mb-6 block">02. Operational Role</h3>
+                    <h3 class="text-[10px] font-bold text-primary uppercase tracking-[0.3em] mb-6 block">02. Customer Details</h3>
                     
-                    <div id="roleField" class="hidden">
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">System Permissions</label>
-                        <select id="role" name="role" class="w-full px-5 py-4 input-glass rounded-2xl text-sm focus:outline-none bg-slate-900">
-                            <option value="">-- Choose Designation --</option>
-                            {% for value, label in role_choices %}
-                                {% if label == 'Admin' or label == 'Cashier' %}
-                                    <option value="{{ value }}" {% if form_data.role == value %}selected{% endif %}>{{ label }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-
-                    <div id="addressField" class="hidden space-y-6">
+                    <div class="space-y-6">
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Permanent Residence</label>
                             <textarea name="address" rows="3" class="w-full px-5 py-4 input-glass rounded-2xl text-sm resize-none" placeholder="Mahayag, Zamboanga del Sur">{{ form_data.address }}</textarea>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <label class="flex items-center p-4 glass rounded-2xl cursor-pointer hover:bg-white/5 border border-white/10">
-                                <input type="checkbox" name="is_senior" value="true" class="w-4 h-4 text-primary rounded border-white/10 bg-white/5">
-                                <span class="ml-3 text-xs text-slate-400 font-bold uppercase tracking-wider">Senior Citizen</span>
-                            </label>
-                            <label class="flex items-center p-4 glass rounded-2xl cursor-pointer hover:bg-white/5 border border-white/10">
-                                <input type="checkbox" name="is_pwd" value="true" class="w-4 h-4 text-primary rounded border-white/10 bg-white/5">
-                                <span class="ml-3 text-xs text-slate-400 font-bold uppercase tracking-wider">PWD Individual</span>
-                            </label>
-                        </div>
-
-                        <div id="idDocumentField">
+                        <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-3 ml-1">Verification Document (PDF/IMG)</label>
                             <div class="relative glass border-2 border-dashed border-white/10 rounded-3xl p-8 flex items-center justify-center hover:border-primary/50 transition-all cursor-pointer">
                                 <input type="file" name="id_document" accept=".pdf,.jpg,.jpeg,.png" class="absolute inset-0 opacity-0 cursor-pointer">
@@ -276,38 +226,6 @@
         </div>
     </div>
 
-    <script>
-        function toggleUserTypeFields() {
-            const userType = document.querySelector('input[name="user_type"]:checked').value;
-            const roleField = document.getElementById('roleField');
-            const addressField = document.getElementById('addressField');
-            const roleSelect = document.getElementById('role');
-
-            if (userType === 'employee') {
-                roleField.style.display = 'block';
-                addressField.style.display = 'none';
-                roleSelect.setAttribute('required', 'required');
-            } else {
-                roleField.style.display = 'none';
-                addressField.style.display = 'block';
-                roleSelect.removeAttribute('required');
-                roleSelect.value = '';
-            }
-        }
-
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
-            const userType = document.querySelector('input[name="user_type"]:checked').value;
-            const roleSelect = document.getElementById('role');
-            if (userType === 'employee' && !roleSelect.value) {
-                e.preventDefault();
-                alert('Conflict: Functional role selection is required for employee profiles.');
-                roleSelect.focus();
-                return false;
-            }
-            return true;
-        });
-
-        document.addEventListener('DOMContentLoaded', toggleUserTypeFields);
-    </script>
+    <!-- Customer-only registration - no additional JS needed -->
 </body>
 </html>

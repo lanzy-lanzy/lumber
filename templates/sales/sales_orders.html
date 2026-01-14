@@ -338,10 +338,7 @@
                             <p class="text-sm text-gray-600">Selected Customer</p>
                             <p class="font-semibold" x-text="formData.customer_name"></p>
                         </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Discount</p>
-                            <p class="font-semibold" x-text="formData.is_senior || formData.is_pwd ? '20% (Senior/PWD)' : 'None'"></p>
-                        </div>
+
                     </div>
                 </template>
 
@@ -477,27 +474,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" 
-                           x-model="newCustomer.email" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                </div>
-
-                <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Address</label>
                     <textarea x-model="newCustomer.address" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
                 </div>
 
-                <div class="space-y-2">
-                    <label class="flex items-center">
-                        <input type="checkbox" x-model="newCustomer.is_senior" class="rounded border-gray-300 mr-2">
-                        <span class="text-sm font-medium text-gray-700">Senior Citizen (20% discount)</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="checkbox" x-model="newCustomer.is_pwd" class="rounded border-gray-300 mr-2">
-                        <span class="text-sm font-medium text-gray-700">PWD (20% discount)</span>
-                    </label>
-                </div>
+
 
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
@@ -728,10 +709,7 @@ function salesOrdersApp() {
         newCustomer: {
             name: '',
             phone_number: '',
-            email: '',
-            address: '',
-            is_senior: false,
-            is_pwd: false
+            address: ''
         },
         
         viewingOrder: null,
@@ -850,8 +828,6 @@ function salesOrdersApp() {
             this.formData.customer_id = customer.id;
             this.formData.customer_name = customer.name;
             this.formData.customerSearch = customer.name;
-            this.formData.is_senior = customer.is_senior;
-            this.formData.is_pwd = customer.is_pwd;
             this.showCustomerDropdown = false;
             this.calculateOrderSummary();
         },
@@ -904,14 +880,14 @@ function salesOrdersApp() {
 
         calculateOrderSummary() {
             const subtotal = this.formData.items.reduce((sum, item) => sum + (item.subtotal || 0), 0);
-            const discount = (this.formData.is_senior || this.formData.is_pwd) ? 0.20 : 0;
-            const discountAmount = subtotal * discount;
-            const total = subtotal - discountAmount;
+            const discount = 0;
+            const discountAmount = 0;
+            const total = subtotal;
 
             this.formData.summary = {
                 subtotal: subtotal,
-                discount: discount * 100,
-                discountAmount: discountAmount,
+                discount: 0,
+                discountAmount: 0,
                 total: total
             };
 
@@ -1004,10 +980,7 @@ function salesOrdersApp() {
                     this.newCustomer = {
                         name: '',
                         phone_number: '',
-                        email: '',
-                        address: '',
-                        is_senior: false,
-                        is_pwd: false
+                        address: ''
                     };
                     await this.loadCustomers();
                 } else {

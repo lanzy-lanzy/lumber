@@ -124,28 +124,55 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Load suppliers
     fetch('/api/suppliers/')
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) {
+                console.error('Failed to fetch suppliers:', r.status, r.statusText);
+                throw new Error(`HTTP ${r.status}`);
+            }
+            return r.json();
+        })
         .then(data => {
+            console.log('Suppliers loaded:', data);
             const select = document.querySelector('select[name="supplier_id"]');
-            data.forEach(supplier => {
+            // Handle paginated response
+            const suppliers = Array.isArray(data) ? data : (data.results || []);
+            suppliers.forEach(supplier => {
                 const option = document.createElement('option');
                 option.value = supplier.id;
                 option.textContent = supplier.company_name;
                 select.appendChild(option);
             });
+        })
+        .catch(error => {
+            console.error('Error loading suppliers:', error);
         });
 
     // Load products
     fetch('/api/products/')
-        .then(r => r.json())
+        .then(r => {
+            if (!r.ok) {
+                console.error('Failed to fetch products:', r.status, r.statusText);
+                throw new Error(`HTTP ${r.status}`);
+            }
+            return r.json();
+        })
         .then(data => {
+            console.log('Products loaded:', data);
             const select = document.querySelector('select[name="product_id"]');
-            data.forEach(product => {
+            // Handle paginated response
+            const products = Array.isArray(data) ? data : (data.results || []);
+            if (products.length === 0) {
+                console.warn('No products returned from API');
+            }
+            products.forEach(product => {
                 const option = document.createElement('option');
                 option.value = product.id;
                 option.textContent = product.name;
                 select.appendChild(option);
             });
+        })
+        .catch(error => {
+            console.error('Error loading products:', error);
         });
 
     // Calculate board feet

@@ -90,8 +90,6 @@ def register_view(request):
             errors.append('First name is required.')
         if not last_name:
             errors.append('Last name is required.')
-        if not email:
-            errors.append('Email is required.')
         if not username:
             errors.append('Username is required.')
         if not password:
@@ -122,7 +120,7 @@ def register_view(request):
         # Check if user already exists
         if CustomUser.objects.filter(username=username).exists():
             errors.append('Username already exists.')
-        if CustomUser.objects.filter(email=email).exists():
+        if email and CustomUser.objects.filter(email=email).exists():
             errors.append('Email already registered.')
         
         if errors:

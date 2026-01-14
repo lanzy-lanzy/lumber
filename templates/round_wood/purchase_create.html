@@ -51,13 +51,20 @@
                 <div class="grid grid-cols-1 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Wood Type *</label>
-                        <select name="wood_type_id" required
-                            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">-- Select Wood Type --</option>
-                            {% for wood_type in wood_types %}
-                            <option value="{{ wood_type.id }}">{{ wood_type.name }}</option>
-                            {% endfor %}
-                        </select>
+                        <div class="flex gap-2">
+                            <select name="wood_type_id" id="wood_type_id" required
+                                class="flex-1 border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <option value="">-- Select Wood Type --</option>
+                                {% for wood_type in wood_types %}
+                                <option value="{{ wood_type.id }}">{{ wood_type.name }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="button" id="addWoodTypeBtn"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-medium"
+                                title="Create New Wood Type">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div>
@@ -173,6 +180,51 @@
     </div>
 </div>
 
+<!-- Add Wood Type Modal -->
+<div id="addWoodTypeModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Create New Wood Type</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-600" id="closeWoodTypeModal">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <form id="addWoodTypeForm" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="woodTypeName" class="block text-sm font-medium text-gray-700 mb-1">
+                    <i class="fas fa-star text-red-500"></i> Wood Type Name
+                </label>
+                <input type="text" id="woodTypeName" name="name"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="e.g., Mahogany, Pine, Oak" required>
+            </div>
+
+            <div>
+                <label for="woodTypeDescription" class="block text-sm font-medium text-gray-700 mb-1">
+                    Description (Optional)
+                </label>
+                <textarea id="woodTypeDescription" name="description"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    rows="2" placeholder="Add any notes about this wood type..."></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition duration-200 font-medium">
+                    <i class="fas fa-save mr-2"></i>Create Wood Type
+                </button>
+                <button type="button" id="cancelWoodTypeModal"
+                    class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition duration-200 font-medium">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Walk-in Supplier Modal -->
 <div id="walkinSupplierModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
@@ -214,13 +266,6 @@
             </div>
 
             <div>
-                <label for="supplierEmail" class="block text-sm font-medium text-gray-700 mb-1">Email (Optional)</label>
-                <input type="email" id="supplierEmail" name="email"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="supplier@example.com">
-            </div>
-
-            <div>
                 <label for="supplierAddress" class="block text-sm font-medium text-gray-700 mb-1">Address
                     (Optional)</label>
                 <textarea id="supplierAddress" name="address"
@@ -244,12 +289,84 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Wood Type Modal Elements
+        const addWoodTypeBtn = document.getElementById('addWoodTypeBtn');
+        const addWoodTypeModal = document.getElementById('addWoodTypeModal');
+        const closeWoodTypeModal = document.getElementById('closeWoodTypeModal');
+        const cancelWoodTypeModal = document.getElementById('cancelWoodTypeModal');
+        const addWoodTypeForm = document.getElementById('addWoodTypeForm');
+        const woodTypeSelect = document.getElementById('wood_type_id');
+
+        // Supplier Modal Elements
         const walkinSupplierBtn = document.getElementById('walkinSupplierBtn');
         const walkinSupplierModal = document.getElementById('walkinSupplierModal');
         const closeSupplierModal = document.getElementById('closeSupplierModal');
         const cancelSupplierModal = document.getElementById('cancelSupplierModal');
         const walkinSupplierForm = document.getElementById('walkinSupplierForm');
         const supplierSelect = document.getElementById('supplier_id');
+
+        // ===== WOOD TYPE MODAL MANAGEMENT =====
+        addWoodTypeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            addWoodTypeModal.classList.remove('hidden');
+            setTimeout(() => document.getElementById('woodTypeName').focus(), 100);
+        });
+
+        [closeWoodTypeModal, cancelWoodTypeModal].forEach(btn => {
+            btn.addEventListener('click', function () {
+                addWoodTypeModal.classList.add('hidden');
+            });
+        });
+
+        // Wood Type Form Submission
+        addWoodTypeForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('woodTypeName').value);
+            formData.append('description', document.getElementById('woodTypeDescription').value);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            try {
+                const response = await fetch('{% url "round_wood:api_create_wood_type" %}', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Add new wood type to dropdown
+                    const option = document.createElement('option');
+                    option.value = data.id;
+                    option.textContent = data.name;
+                    option.selected = true;
+                    woodTypeSelect.appendChild(option);
+
+                    // Close modal and reset form
+                    addWoodTypeModal.classList.add('hidden');
+                    addWoodTypeForm.reset();
+
+                    // Show success message
+                    showAlert('Wood type created successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    showAlert(error.message || 'Error creating wood type', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error creating wood type', 'error');
+            }
+        });
+
+        // Close wood type modal when clicking outside
+        addWoodTypeModal.addEventListener('click', function (e) {
+            if (e.target === addWoodTypeModal) {
+                addWoodTypeModal.classList.add('hidden');
+            }
+        });
+
+        // ===== SUPPLIER MODAL MANAGEMENT =====
 
         // Modal management
         walkinSupplierBtn.addEventListener('click', function (e) {
@@ -272,7 +389,6 @@
             formData.append('company_name', document.getElementById('supplierCompanyName').value);
             formData.append('contact_person', document.getElementById('supplierContactPerson').value);
             formData.append('phone_number', document.getElementById('supplierPhone').value);
-            formData.append('email', document.getElementById('supplierEmail').value);
             formData.append('address', document.getElementById('supplierAddress').value);
             formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
 

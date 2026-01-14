@@ -88,18 +88,6 @@
                         </div>
                     </div>
 
-                    <!-- Senior/PWD -->
-                    <div class="flex gap-4 mb-6">
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="currentSale.is_senior" class="mr-2">
-                            <span class="text-sm text-gray-700">Senior Citizen</span>
-                        </label>
-                        <label class="flex items-center">
-                            <input type="checkbox" x-model="currentSale.is_pwd" class="mr-2">
-                            <span class="text-sm text-gray-700">PWD</span>
-                        </label>
-                    </div>
-
                     <!-- Action Buttons -->
                     <div class="flex gap-3">
                         <button @click="clearCart()" class="flex-1 px-4 py-2 bg-gray-300 text-gray-900 rounded-lg hover:bg-gray-400">
@@ -197,8 +185,6 @@ function posData() {
         currentSale: {
             customer_name: '',
             payment_type: 'cash',
-            is_senior: false,
-            is_pwd: false,
             items: []
         },
         async init() {

@@ -269,3 +269,36 @@ def create_walkin_supplier(request):
     
     except Exception as e:
         return JsonResponse({'message': f'Error creating supplier: {str(e)}'}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def create_wood_type(request):
+    """Create a new wood type for round wood purchase"""
+    try:
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        
+        # Validation
+        if not name:
+            return JsonResponse({'message': 'Wood type name is required'}, status=400)
+        
+        # Check if wood type already exists
+        if WoodType.objects.filter(name__iexact=name).exists():
+            return JsonResponse({'message': 'This wood type already exists'}, status=400)
+        
+        # Create wood type
+        wood_type = WoodType.objects.create(
+            name=name,
+            description=description or '',
+            is_active=True,
+        )
+        
+        return JsonResponse({
+            'id': wood_type.id,
+            'name': wood_type.name,
+            'description': wood_type.description,
+        }, status=201)
+    
+    except Exception as e:
+        return JsonResponse({'message': f'Error creating wood type: {str(e)}'}, status=500)

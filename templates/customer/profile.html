@@ -158,41 +158,6 @@
                         </div>
 
                         <div class="space-y-4">
-                            {% if customer_profile.is_senior %}
-                                <div class="p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-star text-2xl text-yellow-400"></i>
-                                        <div>
-                                            <p class="font-bold text-yellow-300">Senior Citizen</p>
-                                            <p class="text-sm text-yellow-200">20% discount applied to all purchases</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-
-                            {% if customer_profile.is_pwd %}
-                                <div class="p-4 bg-purple-900/30 border border-purple-700/50 rounded-lg">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-heart text-2xl text-purple-400"></i>
-                                        <div>
-                                            <p class="font-bold text-purple-300">Person with Disability (PWD)</p>
-                                            <p class="text-sm text-purple-200">20% discount applied to all purchases</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
-
-                            {% if not customer_profile.is_senior and not customer_profile.is_pwd %}
-                                <div class="p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
-                                    <div class="flex items-center gap-3">
-                                        <i class="fas fa-user-check text-2xl text-slate-400"></i>
-                                        <div>
-                                            <p class="font-bold text-slate-300">Regular Customer</p>
-                                            <p class="text-sm text-slate-400">Standard pricing applies to your purchases</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endif %}
                         </div>
                     </div>
 

@@ -202,13 +202,26 @@ class ShoppingCartViewSet(viewsets.ViewSet):
             )
         
         # Get or create customer from user email
-        customer, created = Customer.objects.get_or_create(
-            email=request.user.email,
-            defaults={
-                'name': request.user.get_full_name() or request.user.username,
-                'phone_number': getattr(request.user, 'phone_number', ''),
-            }
-        )
+        # Handle case where email might be empty
+        customer_email = request.user.email if request.user.email else None
+        
+        if customer_email:
+            customer, created = Customer.objects.get_or_create(
+                email=customer_email,
+                defaults={
+                    'name': request.user.get_full_name() or request.user.username,
+                    'phone_number': getattr(request.user, 'phone_number', ''),
+                }
+            )
+        else:
+            # If no email, create without using email as lookup
+            customer, created = Customer.objects.get_or_create(
+                name=request.user.get_full_name() or request.user.username,
+                defaults={
+                    'email': '',
+                    'phone_number': getattr(request.user, 'phone_number', ''),
+                }
+            )
         
         # Prepare items for sales order
         items = []
